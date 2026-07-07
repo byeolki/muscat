@@ -17,14 +17,14 @@ struct RadioView: View {
     var body: some View {
         List {
             Section {
-                TextField("아티스트 이름으로 스테이션 시작 (비워두면 전체 라이브러리 기반)", text: $seedArtistName)
+                TextField("Start a station from an artist name (leave blank for whole library)", text: $seedArtistName)
                 Button {
                     Task { await startStation() }
                 } label: {
                     if isLoading {
                         ProgressView()
                     } else {
-                        Text("스테이션 시작")
+                        Text("Start Station")
                     }
                 }
                 .disabled(isLoading)
@@ -35,7 +35,7 @@ struct RadioView: View {
                     Button {
                         playerStore.play(tracks: stationTracks.map { QueueTrack($0) }, startAt: 0)
                     } label: {
-                        Label("전체 재생", systemImage: "play.fill")
+                        Label("Play All", systemImage: "play.fill")
                     }
                     Button {
                         Task { await saveMix() }
@@ -43,13 +43,13 @@ struct RadioView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Label("플레이리스트로 저장", systemImage: "square.and.arrow.down")
+                            Label("Save as Playlist", systemImage: "square.and.arrow.down")
                         }
                     }
                     .disabled(isSaving)
                 }
 
-                Section("추천 트랙") {
+                Section("Recommended Tracks") {
                     ForEach(Array(stationTracks.enumerated()), id: \.element.id) { index, track in
                         Button {
                             playerStore.play(tracks: stationTracks.map { QueueTrack($0) }, startAt: index)
@@ -68,7 +68,7 @@ struct RadioView: View {
                 Text(errorMessage).foregroundStyle(.red)
             }
         }
-        .navigationTitle("라디오")
+        .navigationTitle("Radio")
     }
 
     private func startStation() async {
@@ -95,7 +95,7 @@ struct RadioView: View {
             let playlist = try await appEnvironment.apiClient.createRadioMix(
                 seedArtistName: trimmed.isEmpty ? nil : trimmed
             )
-            savedMixMessage = "\"\(playlist.name)\" 플레이리스트로 저장했습니다."
+            savedMixMessage = "Saved as playlist \"\(playlist.name)\"."
         } catch {
             errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }

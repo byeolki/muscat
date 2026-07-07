@@ -24,17 +24,17 @@ struct FavoritesListView: View {
                         Button {
                             playerStore.play(tracks: queue, startAt: index)
                         } label: {
-                            Label("재생", systemImage: "play.fill")
+                            Label("Play", systemImage: "play.fill")
                         }
                         Button(role: .destructive) {
                             Task { await unfavorite(trackId: entry.track.id) }
                         } label: {
-                            Label("즐겨찾기 해제", systemImage: "heart.slash")
+                            Label("Remove Favorite", systemImage: "heart.slash")
                         }
                     }
                 }
             }
-            .navigationTitle("즐겨찾기")
+            .navigationTitle("Favorites")
             .navigationDestination(for: String.self) { trackId in
                 if let index = favorites.firstIndex(where: { $0.track.id == trackId }) {
                     TrackDetailView(trackId: trackId, queue: queue, index: index, initialIsFavorited: true)
@@ -48,7 +48,7 @@ struct FavoritesListView: View {
                         Image(systemName: "heart")
                             .font(.largeTitle)
                             .foregroundStyle(.secondary)
-                        Text(errorMessage ?? "즐겨찾기한 트랙이 없습니다.")
+                        Text(errorMessage ?? "No favorited tracks yet.")
                             .foregroundStyle(.secondary)
                     }
                 }

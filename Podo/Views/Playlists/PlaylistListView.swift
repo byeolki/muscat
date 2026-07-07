@@ -13,19 +13,19 @@ struct PlaylistListView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("내 플레이리스트") {
+                Section("My Playlists") {
                     ForEach(myPlaylists) { playlist in
                         NavigationLink(value: playlist.id) {
                             PlaylistRow(playlist: playlist)
                         }
                     }
                     if myPlaylists.isEmpty && !isLoading {
-                        Text("아직 만든 플레이리스트가 없습니다.")
+                        Text("You have not created any playlists yet.")
                             .foregroundStyle(.secondary)
                     }
                 }
                 if !publicPlaylists.isEmpty {
-                    Section("공개 플레이리스트") {
+                    Section("Public Playlists") {
                         ForEach(publicPlaylists) { playlist in
                             NavigationLink(value: playlist.id) {
                                 PlaylistRow(playlist: playlist)
@@ -37,7 +37,7 @@ struct PlaylistListView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
-            .navigationTitle("플레이리스트")
+            .navigationTitle("Playlists")
             .navigationDestination(for: String.self) { playlistId in
                 PlaylistDetailView(playlistId: playlistId)
             }

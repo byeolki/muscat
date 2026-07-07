@@ -32,10 +32,10 @@ struct AddTracksToPlaylistView: View {
                     }
                 }
             }
-            .navigationTitle("트랙 추가")
+            .navigationTitle("Add Tracks")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -44,7 +44,7 @@ struct AddTracksToPlaylistView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("추가 (\(selectedIds.count))")
+                            Text("Add (\(selectedIds.count))")
                         }
                     }
                     .disabled(selectedIds.isEmpty || isSaving)

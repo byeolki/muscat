@@ -20,7 +20,7 @@ struct TrackRowView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text(track.displayArtist.isEmpty ? "알 수 없는 아티스트" : track.displayArtist)
+                Text(track.displayArtist.isEmpty ? "Unknown Artist" : track.displayArtist)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

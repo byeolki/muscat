@@ -8,32 +8,32 @@ struct AccountView: View {
         NavigationStack {
             List {
                 if let user = authStore.currentUser {
-                    Section("계정") {
-                        LabeledContent("이름", value: user.name)
-                        LabeledContent("이메일", value: user.email)
-                        LabeledContent("역할", value: user.role == .admin ? "관리자" : "일반 사용자")
+                    Section("Account") {
+                        LabeledContent("Name", value: user.name)
+                        LabeledContent("Email", value: user.email)
+                        LabeledContent("Role", value: user.role == .admin ? "Admin" : "User")
                     }
                 }
                 Section {
-                    NavigationLink("내 파일") {
+                    NavigationLink("My Files") {
                         MyFilesView()
                     }
-                    NavigationLink("라디오 스테이션") {
+                    NavigationLink("Radio Station") {
                         RadioView()
                     }
                     if authStore.currentUser?.role == .admin {
-                        NavigationLink("관리자") {
+                        NavigationLink("Admin") {
                             AdminView()
                         }
                     }
                 }
                 Section {
-                    Button("로그아웃", role: .destructive) {
+                    Button("Log Out", role: .destructive) {
                         Task { await authStore.logout() }
                     }
                 }
             }
-            .navigationTitle("계정")
+            .navigationTitle("Account")
         }
     }
 }

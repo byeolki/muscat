@@ -46,7 +46,7 @@ struct TrackDetailView: View {
                     Button {
                         playerStore.play(tracks: queue, startAt: index)
                     } label: {
-                        Label("재생", systemImage: "play.fill")
+                        Label("Play", systemImage: "play.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -87,7 +87,7 @@ struct TrackDetailView: View {
 
                 if let lyrics {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("가사")
+                        Text("Lyrics")
                             .font(.headline)
                         Text(lyrics.content)
                             .font(.body)

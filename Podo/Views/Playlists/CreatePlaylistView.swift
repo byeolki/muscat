@@ -16,19 +16,19 @@ struct CreatePlaylistView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("정보") {
-                    TextField("이름", text: $name)
-                    TextField("설명 (선택)", text: $description)
-                    Toggle("공개 플레이리스트", isOn: $isPublic)
+                Section("Info") {
+                    TextField("Name", text: $name)
+                    TextField("Description (optional)", text: $description)
+                    Toggle("Public Playlist", isOn: $isPublic)
                 }
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
-            .navigationTitle("새 플레이리스트")
+            .navigationTitle("New Playlist")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -37,7 +37,7 @@ struct CreatePlaylistView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("만들기")
+                            Text("Create")
                         }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)

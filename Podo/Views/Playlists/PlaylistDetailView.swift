@@ -44,7 +44,7 @@ struct PlaylistDetailView: View {
                     Button {
                         playerStore.play(tracks: queue, startAt: 0)
                     } label: {
-                        Label("전체 재생", systemImage: "play.fill")
+                        Label("Play All", systemImage: "play.fill")
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(queue.isEmpty)
@@ -82,23 +82,23 @@ struct PlaylistDetailView: View {
                     Button {
                         showAddTracks = true
                     } label: {
-                        Label("트랙 추가", systemImage: "plus")
+                        Label("Add Tracks", systemImage: "plus")
                     }
                     if isOwner {
                         Button {
                             showEdit = true
                         } label: {
-                            Label("편집", systemImage: "pencil")
+                            Label("Edit", systemImage: "pencil")
                         }
                         Button {
                             showRadioTokens = true
                         } label: {
-                            Label("라디오 URL", systemImage: "dot.radiowaves.left.and.right")
+                            Label("Radio URL", systemImage: "dot.radiowaves.left.and.right")
                         }
                         Button(role: .destructive) {
                             showDeleteConfirm = true
                         } label: {
-                            Label("삭제", systemImage: "trash")
+                            Label("Delete", systemImage: "trash")
                         }
                     }
                 } label: {
@@ -130,8 +130,8 @@ struct PlaylistDetailView: View {
         .sheet(isPresented: $showRadioTokens) {
             RadioTokensView(playlistId: playlistId)
         }
-        .confirmationDialog("이 플레이리스트를 삭제할까요?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-            Button("삭제", role: .destructive) {
+        .confirmationDialog("Delete this playlist?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
                 Task { await deletePlaylist() }
             }
         }

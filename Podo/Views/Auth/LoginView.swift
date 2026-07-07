@@ -17,7 +17,7 @@ struct LoginView: View {
                     .font(.largeTitle.bold())
 
                 VStack(spacing: 12) {
-                    TextField("이메일", text: $email)
+                    TextField("Email", text: $email)
                         #if os(iOS)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
@@ -25,7 +25,7 @@ struct LoginView: View {
                         .autocorrectionDisabled()
                         .textFieldStyle(.roundedBorder)
 
-                    SecureField("비밀번호", text: $password)
+                    SecureField("Password", text: $password)
                         .textFieldStyle(.roundedBorder)
                 }
                 .padding(.horizontal)
@@ -42,7 +42,7 @@ struct LoginView: View {
                     if authStore.isLoading {
                         ProgressView()
                     } else {
-                        Text("로그인")
+                        Text("Log In")
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -50,7 +50,7 @@ struct LoginView: View {
                 .disabled(email.isEmpty || password.isEmpty || authStore.isLoading)
                 .padding(.horizontal)
 
-                Button("초대코드로 가입하기") {
+                Button("Sign up with an invite code") {
                     showRegister = true
                 }
                 .font(.footnote)

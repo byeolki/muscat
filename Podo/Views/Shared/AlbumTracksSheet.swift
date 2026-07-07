@@ -46,13 +46,13 @@ struct AlbumTracksSheet: View {
                     }
                 }
             }
-            .navigationTitle(album?.title ?? "앨범")
+            .navigationTitle(album?.title ?? "Album")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
             }
             .overlay {

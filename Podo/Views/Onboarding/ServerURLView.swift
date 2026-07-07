@@ -18,9 +18,9 @@ struct ServerURLView: View {
                     Image(systemName: "server.rack")
                         .font(.system(size: 44))
                         .foregroundStyle(.tint)
-                    Text("Podo 서버 주소 입력")
+                    Text("Enter Your Podo Server Address")
                         .font(.title2.bold())
-                    Text("자체 호스팅 중인 Podo 서버의 주소를 입력하세요.")
+                    Text("Enter the address of your self-hosted Podo server.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -47,7 +47,7 @@ struct ServerURLView: View {
                     if isChecking {
                         ProgressView()
                     } else {
-                        Text("연결하기")
+                        Text("Connect")
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -63,7 +63,7 @@ struct ServerURLView: View {
 
     private func verifyAndSave() async {
         guard let url = ServerConfig.normalize(urlText) else {
-            errorMessage = "올바른 서버 주소를 입력하세요."
+            errorMessage = "Please enter a valid server address."
             return
         }
         isChecking = true
@@ -71,7 +71,7 @@ struct ServerURLView: View {
         defer { isChecking = false }
 
         guard await appEnvironment.verifyServerURL(url) else {
-            errorMessage = "서버에 연결할 수 없습니다. 주소를 확인하세요."
+            errorMessage = "Could not connect to the server. Please check the address."
             return
         }
         await appEnvironment.saveServerURL(url)

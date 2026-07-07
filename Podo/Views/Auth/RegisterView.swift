@@ -13,36 +13,36 @@ struct RegisterView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("계정 정보") {
-                    TextField("이름", text: $name)
-                    TextField("이메일", text: $email)
+                Section("Account Info") {
+                    TextField("Name", text: $name)
+                    TextField("Email", text: $email)
                         #if os(iOS)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
                         #endif
                         .autocorrectionDisabled()
-                    SecureField("비밀번호", text: $password)
+                    SecureField("Password", text: $password)
                 }
-                Section("초대코드") {
-                    TextField("관리자에게 받은 초대코드", text: $inviteToken)
+                Section("Invite Code") {
+                    TextField("Invite code from your admin", text: $inviteToken)
                         .autocorrectionDisabled()
                 }
                 if let error = authStore.lastErrorMessage {
                     Text(error).foregroundStyle(.red)
                 }
             }
-            .navigationTitle("회원가입")
+            .navigationTitle("Sign Up")
             .toolbar {
                 #if os(iOS)
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     registerButton
                 }
                 #else
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     registerButton
@@ -64,7 +64,7 @@ struct RegisterView: View {
             if authStore.isLoading {
                 ProgressView()
             } else {
-                Text("가입")
+                Text("Sign Up")
             }
         }
         .disabled(name.isEmpty || email.isEmpty || password.isEmpty || inviteToken.isEmpty || authStore.isLoading)

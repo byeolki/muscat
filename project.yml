@@ -46,7 +46,8 @@ targets:
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
         NSLocalNetworkUsageDescription: >-
-          자체 호스팅 중인 Podo 서버(로컬 네트워크의 자체 서버 포함)에 연결하기 위해 네트워크 접근이 필요합니다.
+          Network access is needed to connect to your self-hosted Podo server,
+          including servers on your local network.
         NSSupportsLiveActivities: true
 
   PodoWidgetsExtension:

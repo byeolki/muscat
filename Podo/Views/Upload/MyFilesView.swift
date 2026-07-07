@@ -18,7 +18,7 @@ struct MyFilesView: View {
             if isUploading {
                 HStack {
                     ProgressView()
-                    Text("업로드 중...")
+                    Text("Uploading...")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -33,13 +33,13 @@ struct MyFilesView: View {
                     Button(role: .destructive) {
                         Task { await delete(file) }
                     } label: {
-                        Label("삭제", systemImage: "trash")
+                        Label("Delete", systemImage: "trash")
                     }
                     Button {
                         renamingFile = file
                         renameText = file.filename
                     } label: {
-                        Label("이름 변경", systemImage: "pencil")
+                        Label("Rename", systemImage: "pencil")
                     }
                     .tint(.blue)
                 }
@@ -48,7 +48,7 @@ struct MyFilesView: View {
                 Text(errorMessage).foregroundStyle(.red)
             }
         }
-        .navigationTitle("내 파일")
+        .navigationTitle("My Files")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -63,7 +63,7 @@ struct MyFilesView: View {
             if isLoading && files.isEmpty {
                 ProgressView()
             } else if files.isEmpty && !isLoading {
-                Text("업로드한 파일이 없습니다.")
+                Text("No uploaded files yet.")
                     .foregroundStyle(.secondary)
             }
         }
@@ -76,13 +76,13 @@ struct MyFilesView: View {
         ) { result in
             Task { await handleImport(result) }
         }
-        .alert("파일 이름 변경", isPresented: Binding(
+        .alert("Rename File", isPresented: Binding(
             get: { renamingFile != nil },
             set: { if !$0 { renamingFile = nil } }
         )) {
-            TextField("파일 이름", text: $renameText)
-            Button("취소", role: .cancel) { renamingFile = nil }
-            Button("저장") {
+            TextField("File name", text: $renameText)
+            Button("Cancel", role: .cancel) { renamingFile = nil }
+            Button("Save") {
                 if let file = renamingFile {
                     Task { await rename(file, to: renameText) }
                 }

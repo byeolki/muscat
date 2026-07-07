@@ -12,33 +12,33 @@ struct AdminLibraryView: View {
 
     var body: some View {
         List {
-            Section("라이브러리 루트 추가") {
-                TextField("서버 파일 시스템 경로 (예: /music)", text: $newRootPath)
+            Section("Add Library Root") {
+                TextField("Server filesystem path (e.g. /music)", text: $newRootPath)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif
                     .autocorrectionDisabled()
-                Button("추가") {
+                Button("Add") {
                     Task { await addRoot() }
                 }
                 .disabled(newRootPath.trimmingCharacters(in: .whitespaces).isEmpty)
             }
 
-            Section("루트") {
+            Section("Roots") {
                 ForEach(roots) { root in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(root.path)
                         HStack {
-                            Text(root.enabled ? "활성" : "비활성")
+                            Text(root.enabled ? "Enabled" : "Disabled")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             if let lastScan = root.lastScanAt {
-                                Text("마지막 스캔: \(lastScan.formatted())")
+                                Text("Last scan: \(lastScan.formatted())")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
-                        Button("스캔 시작") {
+                        Button("Start Scan") {
                             Task { await triggerScan(rootId: root.id) }
                         }
                         .font(.caption)
@@ -47,13 +47,13 @@ struct AdminLibraryView: View {
                         Button(role: .destructive) {
                             Task { await deleteRoot(root) }
                         } label: {
-                            Label("삭제", systemImage: "trash")
+                            Label("Delete", systemImage: "trash")
                         }
                     }
                 }
             }
 
-            Section("최근 스캔 기록") {
+            Section("Recent Scans") {
                 ForEach(scanJobs) { job in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
@@ -63,7 +63,7 @@ struct AdminLibraryView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        Text("추가 \(job.added) · 갱신 \(job.updated) · 제거 \(job.removed)")
+                        Text("Added \(job.added) · Updated \(job.updated) · Removed \(job.removed)")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         if let error = job.error {
@@ -72,7 +72,7 @@ struct AdminLibraryView: View {
                     }
                 }
                 if scanJobs.isEmpty && !isLoading {
-                    Text("스캔 기록이 없습니다.").foregroundStyle(.secondary)
+                    Text("No scan history yet.").foregroundStyle(.secondary)
                 }
             }
 
@@ -80,16 +80,16 @@ struct AdminLibraryView: View {
                 Text(errorMessage).foregroundStyle(.red)
             }
         }
-        .navigationTitle("라이브러리 스캔")
+        .navigationTitle("Library Scan")
         .refreshable { await load() }
         .task { await load() }
     }
 
     private func statusLabel(_ status: ScanStatus) -> String {
         switch status {
-        case .running: return "진행 중"
-        case .completed: return "완료"
-        case .failed: return "실패"
+        case .running: return "Running"
+        case .completed: return "Completed"
+        case .failed: return "Failed"
         }
     }
 

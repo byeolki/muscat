@@ -8,19 +8,19 @@ struct MainTabView: View {
     var body: some View {
         TabView {
             TrackListView()
-                .tabItem { Label("라이브러리", systemImage: "music.note.list") }
+                .tabItem { Label("Library", systemImage: "music.note.list") }
 
             SearchView()
-                .tabItem { Label("검색", systemImage: "magnifyingglass") }
+                .tabItem { Label("Search", systemImage: "magnifyingglass") }
 
             FavoritesListView()
-                .tabItem { Label("즐겨찾기", systemImage: "heart") }
+                .tabItem { Label("Favorites", systemImage: "heart") }
 
             PlaylistListView()
-                .tabItem { Label("플레이리스트", systemImage: "rectangle.stack") }
+                .tabItem { Label("Playlists", systemImage: "rectangle.stack") }
 
             AccountView()
-                .tabItem { Label("계정", systemImage: "person.circle") }
+                .tabItem { Label("Account", systemImage: "person.circle") }
         }
         .safeAreaInset(edge: .bottom) {
             if playerStore.currentTrack != nil {

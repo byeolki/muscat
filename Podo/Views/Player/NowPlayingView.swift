@@ -87,7 +87,7 @@ struct NowPlayingView: View {
                             .foregroundStyle(.red)
                     }
                 } else {
-                    Text("재생 중인 곡이 없습니다.")
+                    Text("Nothing is playing.")
                         .foregroundStyle(.secondary)
                 }
 
@@ -95,7 +95,7 @@ struct NowPlayingView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
             }
         }

@@ -24,20 +24,20 @@ struct RadioTokensView: View {
                         if isCreating {
                             ProgressView()
                         } else {
-                            Label("새 라디오 URL 만들기 (90일 유효)", systemImage: "dot.radiowaves.left.and.right")
+                            Label("Create New Radio URL (valid 90 days)", systemImage: "dot.radiowaves.left.and.right")
                         }
                     }
                     .disabled(isCreating)
                 }
 
-                Section("발급된 URL") {
+                Section("Issued URLs") {
                     ForEach(tokens) { token in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(broadcastURLString(for: token))
                                 .font(.caption)
                                 .foregroundStyle(token.isActive ? .primary : .secondary)
                                 .lineLimit(2)
-                            Text(token.isActive ? "만료: \(token.expiresAt.formatted())" : "만료됨 또는 폐기됨")
+                            Text(token.isActive ? "Expires: \(token.expiresAt.formatted())" : "Expired or revoked")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -45,12 +45,12 @@ struct RadioTokensView: View {
                             Button(role: .destructive) {
                                 Task { await revoke(token) }
                             } label: {
-                                Label("폐기", systemImage: "trash")
+                                Label("Revoke", systemImage: "trash")
                             }
                         }
                     }
                     if tokens.isEmpty && !isLoading {
-                        Text("발급된 라디오 URL이 없습니다.").foregroundStyle(.secondary)
+                        Text("No radio URLs issued yet.").foregroundStyle(.secondary)
                     }
                 }
 
@@ -58,13 +58,13 @@ struct RadioTokensView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
-            .navigationTitle("라디오 URL")
+            .navigationTitle("Radio URLs")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
             }
             .task { await load() }

@@ -70,7 +70,7 @@ public final class AuthStore {
     private func handleForcedLogout() {
         currentUser = nil
         isAuthenticated = false
-        lastErrorMessage = "세션이 만료되어 다시 로그인해야 합니다."
+        lastErrorMessage = "Your session expired. Please log in again."
     }
 
     private static func message(for error: Error) -> String {

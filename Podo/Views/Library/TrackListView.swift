@@ -22,7 +22,7 @@ struct TrackListView: View {
                         Button {
                             playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
                         } label: {
-                            Label("재생", systemImage: "play.fill")
+                            Label("Play", systemImage: "play.fill")
                         }
                     }
                     #if os(iOS)
@@ -30,14 +30,14 @@ struct TrackListView: View {
                         Button {
                             playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
                         } label: {
-                            Label("재생", systemImage: "play.fill")
+                            Label("Play", systemImage: "play.fill")
                         }
                         .tint(.accentColor)
                     }
                     #endif
                 }
             }
-            .navigationTitle("라이브러리")
+            .navigationTitle("Library")
             .navigationDestination(for: String.self) { trackId in
                 if let index = tracks.firstIndex(where: { $0.id == trackId }) {
                     TrackDetailView(
@@ -51,16 +51,16 @@ struct TrackListView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Picker("정렬", selection: $sort) {
-                            Text("최신순").tag(TrackSort.newest)
-                            Text("오래된순").tag(TrackSort.oldest)
-                            Text("인기순").tag(TrackSort.popular)
-                            Text("재생순").tag(TrackSort.plays)
+                        Picker("Sort", selection: $sort) {
+                            Text("Newest").tag(TrackSort.newest)
+                            Text("Oldest").tag(TrackSort.oldest)
+                            Text("Most Favorited").tag(TrackSort.popular)
+                            Text("Most Played").tag(TrackSort.plays)
                         }
-                        Picker("필터", selection: $filter) {
-                            Text("전체").tag(TrackFilter.all)
-                            Text("내가 추가한").tag(TrackFilter.mine)
-                            Text("즐겨찾기").tag(TrackFilter.favorites)
+                        Picker("Filter", selection: $filter) {
+                            Text("All").tag(TrackFilter.all)
+                            Text("Added by Me").tag(TrackFilter.mine)
+                            Text("Favorites").tag(TrackFilter.favorites)
                         }
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
@@ -73,7 +73,7 @@ struct TrackListView: View {
                 } else if let errorMessage, tracks.isEmpty {
                     ContentUnavailableFallback(message: errorMessage)
                 } else if tracks.isEmpty {
-                    ContentUnavailableFallback(message: "트랙이 없습니다.")
+                    ContentUnavailableFallback(message: "No tracks yet.")
                 }
             }
             .refreshable { await load() }

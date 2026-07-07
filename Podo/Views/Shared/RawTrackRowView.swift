@@ -42,7 +42,7 @@ struct RawTrackRowView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text((artist?.isEmpty == false ? artist : nil) ?? "알 수 없는 아티스트")
+                Text((artist?.isEmpty == false ? artist : nil) ?? "Unknown Artist")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

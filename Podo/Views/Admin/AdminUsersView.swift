@@ -24,7 +24,7 @@ struct AdminUsersView: View {
                     if isGeneratingInvite {
                         ProgressView()
                     } else {
-                        Label("초대코드 생성", systemImage: "person.badge.plus")
+                        Label("Generate Invite Code", systemImage: "person.badge.plus")
                     }
                 }
                 .disabled(isGeneratingInvite)
@@ -53,7 +53,7 @@ struct AdminUsersView: View {
                 }
             }
 
-            Section("사용자 (\(users.count))") {
+            Section("Users (\(users.count))") {
                 ForEach(users) { user in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
@@ -75,7 +75,7 @@ struct AdminUsersView: View {
                 Text(errorMessage).foregroundStyle(.red)
             }
         }
-        .navigationTitle("사용자 관리")
+        .navigationTitle("User Management")
         .overlay {
             if isLoading && users.isEmpty {
                 ProgressView()

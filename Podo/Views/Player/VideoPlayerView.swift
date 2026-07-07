@@ -33,7 +33,7 @@ struct VideoPlayerView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
             }
         }
@@ -48,7 +48,7 @@ struct VideoPlayerView: View {
 
     private func loadVideo() async {
         guard let url = await appEnvironment.apiClient.streamURL(trackId: trackId, mediaKind: .video) else {
-            errorMessage = "영상 스트리밍 주소를 만들 수 없습니다."
+            errorMessage = "Could not build a video streaming URL."
             return
         }
         let newPlayer = AVPlayer(url: url)

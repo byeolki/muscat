@@ -34,25 +34,25 @@ struct EditPlaylistView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("정보") {
-                    TextField("이름", text: $name)
-                    TextField("설명", text: $description)
-                    Toggle("공개 플레이리스트", isOn: $isPublic)
+                Section("Info") {
+                    TextField("Name", text: $name)
+                    TextField("Description", text: $description)
+                    Toggle("Public Playlist", isOn: $isPublic)
                 }
 
-                Section("커버 이미지") {
+                Section("Cover Image") {
                     #if os(iOS)
-                    PhotosPicker("사진 보관함에서 선택", selection: $selectedPhoto, matching: .images)
+                    PhotosPicker("Choose from Photo Library", selection: $selectedPhoto, matching: .images)
                         .onChange(of: selectedPhoto) { _, newValue in
                             Task { await uploadPickedPhoto(newValue) }
                         }
                     #else
-                    Button("이미지 파일 선택") { showFileImporter = true }
+                    Button("Choose Image File") { showFileImporter = true }
                         .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.jpeg, .png, .webP]) { result in
                             Task { await uploadImportedFile(result) }
                         }
                     #endif
-                    Button("커버 이미지 삭제", role: .destructive) {
+                    Button("Remove Cover Image", role: .destructive) {
                         Task { await deleteCover() }
                     }
                 }
@@ -61,10 +61,10 @@ struct EditPlaylistView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
-            .navigationTitle("플레이리스트 편집")
+            .navigationTitle("Edit Playlist")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -73,7 +73,7 @@ struct EditPlaylistView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("저장")
+                            Text("Save")
                         }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)

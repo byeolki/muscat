@@ -54,17 +54,17 @@ public enum APIClientError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidServerURL:
-            return "서버 주소가 올바르지 않습니다."
+            return "The server address is invalid."
         case .notAuthenticated:
-            return "로그인이 필요합니다."
+            return "You need to log in."
         case .transport(let error):
             return error.localizedDescription
         case .decoding:
-            return "서버 응답을 해석할 수 없습니다."
+            return "Couldn't parse the server's response."
         case .server(_, let message):
             return message
         case .unknown:
-            return "알 수 없는 오류가 발생했습니다."
+            return "An unknown error occurred."
         }
     }
 }

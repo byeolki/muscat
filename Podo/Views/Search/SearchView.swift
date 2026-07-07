@@ -15,7 +15,7 @@ struct SearchView: View {
         NavigationStack {
             List {
                 if let tracks = results?.tracks, !tracks.isEmpty {
-                    Section("트랙") {
+                    Section("Tracks") {
                         ForEach(tracks) { hit in
                             Button {
                                 playerStore.play(
@@ -38,7 +38,7 @@ struct SearchView: View {
                 }
 
                 if let artists = results?.artists, !artists.isEmpty {
-                    Section("아티스트") {
+                    Section("Artists") {
                         ForEach(artists) { hit in
                             Button {
                                 query = hit.name
@@ -52,7 +52,7 @@ struct SearchView: View {
                 }
 
                 if let albums = results?.albums, !albums.isEmpty {
-                    Section("앨범") {
+                    Section("Albums") {
                         ForEach(albums) { hit in
                             Button {
                                 selectedAlbum = AlbumSheetItem(id: hit.id)
@@ -68,13 +68,13 @@ struct SearchView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
-            .navigationTitle("검색")
-            .searchable(text: $query, prompt: "트랙, 아티스트, 앨범 검색")
+            .navigationTitle("Search")
+            .searchable(text: $query, prompt: "Search tracks, artists, albums")
             .overlay {
                 if isLoading {
                     ProgressView()
                 } else if let results, (results.tracks?.isEmpty ?? true), (results.artists?.isEmpty ?? true), (results.albums?.isEmpty ?? true) {
-                    Text("검색 결과가 없습니다.").foregroundStyle(.secondary)
+                    Text("No results found.").foregroundStyle(.secondary)
                 }
             }
             .task(id: query) {

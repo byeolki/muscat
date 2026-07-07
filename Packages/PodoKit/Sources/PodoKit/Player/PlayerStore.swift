@@ -88,7 +88,7 @@ public final class PlayerStore {
         defer { isLoading = false }
 
         guard let url = await apiClient.streamURL(trackId: track.id, format: .aac) else {
-            errorMessage = "스트리밍 주소를 만들 수 없습니다."
+            errorMessage = "Couldn't build a streaming URL."
             return
         }
         engine.load(url: url, autoplay: true)
@@ -132,7 +132,7 @@ public final class PlayerStore {
             self?.skipToNext()
         }
         engine.onPlaybackStalled = { [weak self] in
-            self?.errorMessage = "재생이 일시적으로 끊겼습니다. 네트워크를 확인하세요."
+            self?.errorMessage = "Playback stalled. Check your network connection."
         }
     }
 
@@ -170,7 +170,7 @@ public final class PlayerStore {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            errorMessage = "오디오 세션을 구성하지 못했습니다."
+            errorMessage = "Couldn't configure the audio session."
         }
         #endif
     }
