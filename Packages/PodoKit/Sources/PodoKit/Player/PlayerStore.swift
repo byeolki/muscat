@@ -7,7 +7,7 @@ import Observation
 @Observable
 @MainActor
 public final class PlayerStore {
-    public private(set) var currentTrack: Track?
+    public private(set) var currentTrack: QueueTrack?
     public private(set) var isPlaying = false
     public private(set) var currentSeconds: Double = 0
     public private(set) var duration: Double?
@@ -31,7 +31,7 @@ public final class PlayerStore {
     public var hasPrevious: Bool { queue.hasPrevious }
 
     /// Replaces the queue with `tracks` and starts playing the one at `index`.
-    public func play(tracks: [Track], startAt index: Int) {
+    public func play(tracks: [QueueTrack], startAt index: Int) {
         queue.replaceAll(tracks, startAt: index)
         guard let track = queue.currentTrack else { return }
         Task { await loadAndPlay(track: track) }
@@ -74,7 +74,7 @@ public final class PlayerStore {
         nowPlaying.updateElapsed(seconds)
     }
 
-    private func loadAndPlay(track: Track) async {
+    private func loadAndPlay(track: QueueTrack) async {
         isLoading = true
         errorMessage = nil
         currentTrack = track

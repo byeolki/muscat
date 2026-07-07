@@ -20,7 +20,7 @@ struct TrackListView: View {
                     }
                     .contextMenu {
                         Button {
-                            playerStore.play(tracks: tracks, startAt: index)
+                            playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
                         } label: {
                             Label("재생", systemImage: "play.fill")
                         }
@@ -28,7 +28,7 @@ struct TrackListView: View {
                     #if os(iOS)
                     .swipeActions(edge: .leading) {
                         Button {
-                            playerStore.play(tracks: tracks, startAt: index)
+                            playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
                         } label: {
                             Label("재생", systemImage: "play.fill")
                         }
@@ -40,7 +40,12 @@ struct TrackListView: View {
             .navigationTitle("라이브러리")
             .navigationDestination(for: String.self) { trackId in
                 if let index = tracks.firstIndex(where: { $0.id == trackId }) {
-                    TrackDetailView(trackId: trackId, allTracks: tracks, index: index)
+                    TrackDetailView(
+                        trackId: trackId,
+                        queue: tracks.map { QueueTrack($0) },
+                        index: index,
+                        initialIsFavorited: tracks[index].isFavorited
+                    )
                 }
             }
             .toolbar {

@@ -60,7 +60,7 @@ final class NowPlayingCenter {
         infoCenter.nowPlayingInfo = nil
     }
 
-    func update(track: Track, currentSeconds: Double, duration: Double?, isPlaying: Bool, artworkURL: URL?) {
+    func update(track: QueueTrack, currentSeconds: Double, duration: Double?, isPlaying: Bool, artworkURL: URL?) {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: track.title,
             MPMediaItemPropertyArtist: track.displayArtist,

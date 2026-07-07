@@ -1,13 +1,13 @@
 import Foundation
 
 /// Ordered playback queue. Deliberately dumb (no shuffle/repeat yet) — `PlayerStore`
-/// drives it. Playlist-sourced queues can be built the same way later by feeding in
-/// the playlist's track list.
+/// drives it. Source-agnostic: anything that can produce `[QueueTrack]` (library list,
+/// playlist, favorites, radio, search) can be played this way.
 struct PlaybackQueue {
-    private(set) var items: [Track] = []
+    private(set) var items: [QueueTrack] = []
     private(set) var currentIndex: Int?
 
-    var currentTrack: Track? {
+    var currentTrack: QueueTrack? {
         guard let currentIndex, items.indices.contains(currentIndex) else { return nil }
         return items[currentIndex]
     }
@@ -22,20 +22,20 @@ struct PlaybackQueue {
         return items.indices.contains(currentIndex - 1)
     }
 
-    mutating func replaceAll(_ tracks: [Track], startAt index: Int) {
+    mutating func replaceAll(_ tracks: [QueueTrack], startAt index: Int) {
         items = tracks
         currentIndex = tracks.indices.contains(index) ? index : nil
     }
 
     @discardableResult
-    mutating func advanceToNext() -> Track? {
+    mutating func advanceToNext() -> QueueTrack? {
         guard hasNext, let currentIndex else { return nil }
         self.currentIndex = currentIndex + 1
         return currentTrack
     }
 
     @discardableResult
-    mutating func advanceToPrevious() -> Track? {
+    mutating func advanceToPrevious() -> QueueTrack? {
         guard hasPrevious, let currentIndex else { return nil }
         self.currentIndex = currentIndex - 1
         return currentTrack

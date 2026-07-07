@@ -1,33 +1,37 @@
 import PodoKit
 import SwiftUI
 
+/// Source-agnostic track detail screen: works from the library list, playlists,
+/// favorites, or search results as long as they can provide a `[QueueTrack]` queue
+/// context (for prev/next) and this track's position in it.
 struct TrackDetailView: View {
     @Environment(AppEnvironment.self) private var appEnvironment
     @Environment(PlayerStore.self) private var playerStore
 
     let trackId: String
-    /// Full list this track came from + its position, so the player queue can advance
-    /// through the whole library rather than just this one track.
-    let allTracks: [Track]
+    let queue: [QueueTrack]
     let index: Int
+    var initialIsFavorited = false
 
     @State private var detail: TrackDetail?
     @State private var lyrics: LyricsResponse?
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var isFavorited = false
+    @State private var showVideo = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                RemoteArtworkView(albumVersionId: detail?.albumVersionId, cornerRadius: 12)
+                RemoteArtworkView(artworkId: detail?.albumVersionId, cornerRadius: 12)
                     .frame(width: 220, height: 220)
                     .padding(.top)
 
                 VStack(spacing: 4) {
-                    Text(detail?.title ?? allTracks[safe: index]?.title ?? "")
+                    Text(detail?.title ?? queue[safe: index]?.title ?? "")
                         .font(.title2.bold())
                         .multilineTextAlignment(.center)
-                    Text(detail?.displayArtist ?? allTracks[safe: index]?.displayArtist ?? "")
+                    Text(detail?.displayArtist ?? queue[safe: index]?.displayArtist ?? "")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                     if let originalArtist = detail?.override?.originalArtist, detail?.isCover == true {
@@ -38,13 +42,32 @@ struct TrackDetailView: View {
                 }
                 .padding(.horizontal)
 
-                Button {
-                    playerStore.play(tracks: allTracks, startAt: index)
-                } label: {
-                    Label("재생", systemImage: "play.fill")
-                        .frame(maxWidth: .infinity)
+                HStack(spacing: 12) {
+                    Button {
+                        playerStore.play(tracks: queue, startAt: index)
+                    } label: {
+                        Label("재생", systemImage: "play.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button {
+                        Task { await toggleFavorite() }
+                    } label: {
+                        Image(systemName: isFavorited ? "heart.fill" : "heart")
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(isFavorited ? .red : .secondary)
+
+                    if detail?.hasVideo == true {
+                        Button {
+                            showVideo = true
+                        } label: {
+                            Image(systemName: "video.fill")
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
                 .padding(.horizontal)
 
                 if let tags = detail?.tags, !tags.isEmpty {
@@ -86,7 +109,11 @@ struct TrackDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .task {
+            isFavorited = initialIsFavorited
             await load()
+        }
+        .sheet(isPresented: $showVideo) {
+            VideoPlayerView(trackId: trackId, title: detail?.title ?? "")
         }
     }
 
@@ -103,9 +130,17 @@ struct TrackDetailView: View {
             errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }
     }
+
+    private func toggleFavorite() async {
+        do {
+            isFavorited = try await appEnvironment.apiClient.toggleFavorite(trackId: trackId)
+        } catch {
+            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        }
+    }
 }
 
-private extension Array {
+extension Array {
     subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
     }

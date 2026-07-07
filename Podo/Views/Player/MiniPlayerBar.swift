@@ -8,7 +8,7 @@ struct MiniPlayerBar: View {
     var body: some View {
         if let track = playerStore.currentTrack {
             HStack(spacing: 12) {
-                RemoteArtworkView(albumVersionId: track.albumVersionId)
+                RemoteArtworkView(artworkId: track.albumVersionId)
                     .frame(width: 40, height: 40)
 
                 VStack(alignment: .leading, spacing: 2) {

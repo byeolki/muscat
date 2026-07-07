@@ -14,7 +14,7 @@ struct NowPlayingView: View {
         NavigationStack {
             VStack(spacing: 24) {
                 if let track = playerStore.currentTrack {
-                    RemoteArtworkView(albumVersionId: track.albumVersionId, cornerRadius: 16)
+                    RemoteArtworkView(artworkId: track.albumVersionId, cornerRadius: 16)
                         .frame(width: 280, height: 280)
                         .padding(.top, 24)
 

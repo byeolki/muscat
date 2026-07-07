@@ -1,11 +1,12 @@
 import PodoKit
 import SwiftUI
 
-/// Resolves an `album_version_id` to an artwork URL asynchronously (the API client is
-/// an actor, so URL-building isn't free) and displays it, falling back to a placeholder.
+/// Resolves an artwork id (`album_version_id` OR a playlist id — the server's
+/// `GET /artwork/:id` checks both) to a URL asynchronously (the API client is an actor,
+/// so URL-building isn't free) and displays it, falling back to a placeholder.
 struct RemoteArtworkView: View {
     @Environment(AppEnvironment.self) private var appEnvironment
-    let albumVersionId: String?
+    let artworkId: String?
     var cornerRadius: CGFloat = 6
 
     @State private var resolvedURL: URL?
@@ -27,12 +28,12 @@ struct RemoteArtworkView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-        .task(id: albumVersionId) {
-            guard let albumVersionId else {
+        .task(id: artworkId) {
+            guard let artworkId else {
                 resolvedURL = nil
                 return
             }
-            resolvedURL = await appEnvironment.apiClient.artworkURL(id: albumVersionId)
+            resolvedURL = await appEnvironment.apiClient.artworkURL(id: artworkId)
         }
     }
 
