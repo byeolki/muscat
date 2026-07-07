@@ -1,4 +1,4 @@
-# Podo Client
+# Muscat
 
 Native iOS/macOS client for [Podo](https://github.com/byeolki/podo), a self-hosted music streaming server. SwiftUI, multiplatform, one codebase.
 
