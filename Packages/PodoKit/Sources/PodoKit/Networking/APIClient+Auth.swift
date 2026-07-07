@@ -47,10 +47,4 @@ extension APIClient {
     func hasStoredSession() -> Bool {
         currentRefreshToken() != nil
     }
-
-    /// Admin-only. Generates a one-time invite token for `POST /auth/register`.
-    public func createInvite() async throws -> String {
-        let response: InviteResponse = try await send(method: "POST", path: "api/v1/auth/invite")
-        return response.inviteToken
-    }
 }
