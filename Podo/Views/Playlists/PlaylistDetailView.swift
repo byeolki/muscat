@@ -15,6 +15,7 @@ struct PlaylistDetailView: View {
     @State private var showAddTracks = false
     @State private var showEdit = false
     @State private var showDeleteConfirm = false
+    @State private var showRadioTokens = false
 
     private var isOwner: Bool {
         guard let playlist, let user = authStore.currentUser else { return false }
@@ -89,6 +90,11 @@ struct PlaylistDetailView: View {
                         } label: {
                             Label("편집", systemImage: "pencil")
                         }
+                        Button {
+                            showRadioTokens = true
+                        } label: {
+                            Label("라디오 URL", systemImage: "dot.radiowaves.left.and.right")
+                        }
                         Button(role: .destructive) {
                             showDeleteConfirm = true
                         } label: {
@@ -120,6 +126,9 @@ struct PlaylistDetailView: View {
             if let playlist {
                 EditPlaylistView(playlist: playlist) { await load() }
             }
+        }
+        .sheet(isPresented: $showRadioTokens) {
+            RadioTokensView(playlistId: playlistId)
         }
         .confirmationDialog("이 플레이리스트를 삭제할까요?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
             Button("삭제", role: .destructive) {

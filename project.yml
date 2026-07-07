@@ -23,6 +23,8 @@ targets:
     dependencies:
       - package: PodoKit
         product: PodoKit
+      - target: PodoWidgetsExtension
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.podo.client.ios
@@ -45,6 +47,30 @@ targets:
           NSAllowsArbitraryLoads: true
         NSLocalNetworkUsageDescription: >-
           자체 호스팅 중인 Podo 서버(로컬 네트워크의 자체 서버 포함)에 연결하기 위해 네트워크 접근이 필요합니다.
+        NSSupportsLiveActivities: true
+
+  PodoWidgetsExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: PodoWidgets
+    dependencies:
+      - package: PodoKit
+        product: PodoKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.podo.client.ios.widgets
+        PRODUCT_NAME: PodoWidgets
+        SWIFT_VERSION: "5.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SKIP_INSTALL: true
+    info:
+      path: Generated/PodoWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: Podo Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
   Podo-macOS:
     type: application
@@ -77,6 +103,7 @@ schemes:
     build:
       targets:
         Podo-iOS: all
+        PodoWidgetsExtension: all
     run:
       config: Debug
     test:

@@ -18,6 +18,9 @@ public final class PlayerStore {
     private let engine = AudioPlayerEngine()
     private let nowPlaying = NowPlayingCenter()
     private let apiClient: APIClient
+    #if os(iOS)
+    private let liveActivity = LiveActivityController()
+    #endif
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
@@ -45,12 +48,14 @@ public final class PlayerStore {
         engine.play()
         isPlaying = true
         nowPlaying.updatePlaybackRate(isPlaying: true)
+        updateLiveActivity()
     }
 
     public func pause() {
         engine.pause()
         isPlaying = false
         nowPlaying.updatePlaybackRate(isPlaying: false)
+        updateLiveActivity()
     }
 
     public func skipToNext() {
@@ -89,7 +94,29 @@ public final class PlayerStore {
         engine.load(url: url, autoplay: true)
         isPlaying = true
         pushNowPlayingInfo(fetchArtwork: true)
+        startLiveActivity(for: track)
         try? await apiClient.recordPlayStart(trackId: track.id)
+    }
+
+    private func startLiveActivity(for track: QueueTrack) {
+        #if os(iOS)
+        liveActivity.start(
+            trackId: track.id, title: track.title, artist: track.displayArtist,
+            currentSeconds: 0, duration: duration ?? 0, isPlaying: true
+        )
+        #endif
+    }
+
+    /// Discrete updates only (start/pause/resume/skip), not a per-second tick — the
+    /// Dynamic Island shows a static progress readout, not a live-ticking counter.
+    private func updateLiveActivity() {
+        #if os(iOS)
+        guard let currentTrack else { return }
+        liveActivity.update(
+            title: currentTrack.title, artist: currentTrack.displayArtist,
+            currentSeconds: currentSeconds, duration: duration ?? 0, isPlaying: isPlaying
+        )
+        #endif
     }
 
     private func wireEngineCallbacks() {

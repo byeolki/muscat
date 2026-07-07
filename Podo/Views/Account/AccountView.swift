@@ -15,6 +15,19 @@ struct AccountView: View {
                     }
                 }
                 Section {
+                    NavigationLink("내 파일") {
+                        MyFilesView()
+                    }
+                    NavigationLink("라디오 스테이션") {
+                        RadioView()
+                    }
+                    if authStore.currentUser?.role == .admin {
+                        NavigationLink("관리자") {
+                            AdminView()
+                        }
+                    }
+                }
+                Section {
                     Button("로그아웃", role: .destructive) {
                         Task { await authStore.logout() }
                     }
