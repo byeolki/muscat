@@ -13,6 +13,9 @@ public final class PlayerStore {
     public private(set) var duration: Double?
     public private(set) var isLoading = false
     public private(set) var errorMessage: String?
+    public private(set) var repeatMode: RepeatMode
+
+    private static let repeatModeDefaultsKey = "podo.repeatMode"
 
     private var queue = PlaybackQueue()
     private let engine = AudioPlayerEngine()
@@ -24,14 +27,29 @@ public final class PlayerStore {
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
+        if let raw = UserDefaults.standard.string(forKey: Self.repeatModeDefaultsKey),
+           let mode = RepeatMode(rawValue: raw) {
+            repeatMode = mode
+        } else {
+            repeatMode = .off
+        }
         configureAudioSession()
         wireEngineCallbacks()
         wireNowPlayingCallbacks()
         nowPlaying.activate()
     }
 
-    public var hasNext: Bool { queue.hasNext }
+    /// Repeat-all wraps the "next" affordance around to the first track, same as the
+    /// web client disabling its next button only when `repeatMode !== 'all'`.
+    public var hasNext: Bool { queue.hasNext || (repeatMode == .all && !queue.items.isEmpty) }
     public var hasPrevious: Bool { queue.hasPrevious }
+
+    public func cycleRepeatMode() {
+        let order = RepeatMode.allCases
+        let currentIndex = order.firstIndex(of: repeatMode) ?? 0
+        repeatMode = order[(currentIndex + 1) % order.count]
+        UserDefaults.standard.set(repeatMode.rawValue, forKey: Self.repeatModeDefaultsKey)
+    }
 
     /// Replaces the queue with `tracks` and starts playing the one at `index`.
     public func play(tracks: [QueueTrack], startAt index: Int) {
@@ -59,8 +77,22 @@ public final class PlayerStore {
     }
 
     public func skipToNext() {
-        guard let track = queue.advanceToNext() else { return }
+        guard let track = queue.advanceToNext(wrapping: repeatMode == .all) else { return }
         Task { await loadAndPlay(track: track) }
+    }
+
+    /// Natural end-of-track (as opposed to a manual "skip next" tap): repeat-one loops
+    /// the same track in place instead of advancing.
+    private func handleTrackDidFinish() {
+        guard repeatMode == .one else {
+            skipToNext()
+            return
+        }
+        Task { [weak self] in
+            guard let self else { return }
+            await self.seek(toSeconds: 0)
+            self.resume()
+        }
     }
 
     /// Restarts the current track if more than 3s in (typical UX), otherwise goes back.
@@ -129,7 +161,7 @@ public final class PlayerStore {
             self?.duration = seconds
         }
         engine.onDidFinishPlaying = { [weak self] in
-            self?.skipToNext()
+            self?.handleTrackDidFinish()
         }
         engine.onPlaybackStalled = { [weak self] in
             self?.errorMessage = "Playback stalled. Check your network connection."

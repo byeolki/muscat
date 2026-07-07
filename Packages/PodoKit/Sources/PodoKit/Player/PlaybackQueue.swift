@@ -1,8 +1,9 @@
 import Foundation
 
-/// Ordered playback queue. Deliberately dumb (no shuffle/repeat yet) — `PlayerStore`
-/// drives it. Source-agnostic: anything that can produce `[QueueTrack]` (library list,
-/// playlist, favorites, radio, search) can be played this way.
+/// Ordered playback queue. Deliberately dumb (no shuffle) — `PlayerStore` drives it,
+/// including repeat-mode wraparound. Source-agnostic: anything that can produce
+/// `[QueueTrack]` (library list, playlist, favorites, radio, search) can be played
+/// this way.
 struct PlaybackQueue {
     private(set) var items: [QueueTrack] = []
     private(set) var currentIndex: Int?
@@ -27,10 +28,18 @@ struct PlaybackQueue {
         currentIndex = tracks.indices.contains(index) ? index : nil
     }
 
+    /// `wrapping: true` (repeat-all) jumps back to the first track when already at the
+    /// last one, instead of stopping.
     @discardableResult
-    mutating func advanceToNext() -> QueueTrack? {
-        guard hasNext, let currentIndex else { return nil }
-        self.currentIndex = currentIndex + 1
+    mutating func advanceToNext(wrapping: Bool = false) -> QueueTrack? {
+        guard let currentIndex else { return nil }
+        if hasNext {
+            self.currentIndex = currentIndex + 1
+        } else if wrapping && !items.isEmpty {
+            self.currentIndex = 0
+        } else {
+            return nil
+        }
         return currentTrack
     }
 

@@ -77,6 +77,14 @@ struct NowPlayingView: View {
                             Image(systemName: "forward.fill").font(.title)
                         }
                         .disabled(!playerStore.hasNext)
+
+                        Button {
+                            playerStore.cycleRepeatMode()
+                        } label: {
+                            Image(systemName: playerStore.repeatMode == .one ? "repeat.1" : "repeat")
+                                .font(.title2)
+                                .foregroundStyle(playerStore.repeatMode == .off ? .secondary : Color.accentColor)
+                        }
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 8)
