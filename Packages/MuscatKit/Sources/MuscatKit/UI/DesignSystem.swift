@@ -180,3 +180,28 @@ public struct ErrorBanner: View {
         .background(Color.appDanger.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
+
+// MARK: - Artist / cover line
+
+/// Renders "Artist Name" or, for covers, "Artist Name · cover of Original Artist" with
+/// "cover" highlighted in the accent color — matches the Podo web dashboard's track row
+/// style. `originalArtist` is only available where the model carries override data
+/// (`Track`, `TrackDetail`); pass `nil` elsewhere to fall back to a plain "· cover" tag.
+public func artistLineText(
+    artist: String,
+    isCover: Bool,
+    originalArtist: String?,
+    textColor: Color = .appTextSecondary,
+    dimColor: Color = .appTextTertiary
+) -> Text {
+    let base = Text(artist.isEmpty ? "Unknown Artist" : artist).foregroundColor(textColor)
+    guard isCover else { return base }
+
+    let separator = Text(" · ").foregroundColor(dimColor)
+    let coverWord = Text("cover").foregroundColor(.appAccent)
+
+    if let originalArtist, !originalArtist.isEmpty {
+        return base + separator + coverWord + Text(" of \(originalArtist)").foregroundColor(textColor)
+    }
+    return base + separator + coverWord
+}

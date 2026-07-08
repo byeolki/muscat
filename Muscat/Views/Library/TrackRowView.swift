@@ -10,19 +10,17 @@ struct TrackRowView: View {
                 .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(track.title)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.appTextPrimary)
-                        .lineLimit(1)
-                    if track.isCover {
-                        BadgeLabel(text: "COVER")
-                    }
-                }
-                Text(track.displayArtist.isEmpty ? "Unknown Artist" : track.displayArtist)
-                    .font(.caption)
-                    .foregroundStyle(Color.appTextSecondary)
+                Text(track.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.appTextPrimary)
                     .lineLimit(1)
+                artistLineText(
+                    artist: track.displayArtist,
+                    isCover: track.isCover,
+                    originalArtist: track.override?.originalArtist
+                )
+                .font(.caption)
+                .lineLimit(1)
             }
 
             Spacer(minLength: 8)

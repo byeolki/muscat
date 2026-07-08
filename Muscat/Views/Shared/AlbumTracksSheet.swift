@@ -30,9 +30,12 @@ struct AlbumTracksSheet: View {
                                             Text(track.title)
                                                 .font(.subheadline.weight(.medium))
                                                 .foregroundStyle(Color.appTextPrimary)
-                                            Text(track.displayArtist)
-                                                .font(.caption)
-                                                .foregroundStyle(Color.appTextSecondary)
+                                            artistLineText(
+                                                artist: track.displayArtist,
+                                                isCover: track.isCover,
+                                                originalArtist: nil
+                                            )
+                                            .font(.caption)
                                         }
                                         Spacer()
                                         if let duration = track.durationSeconds {

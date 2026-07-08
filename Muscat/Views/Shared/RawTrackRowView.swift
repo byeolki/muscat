@@ -32,19 +32,17 @@ struct RawTrackRowView: View {
                 .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.appTextPrimary)
-                        .lineLimit(1)
-                    if isCover {
-                        BadgeLabel(text: "COVER")
-                    }
-                }
-                Text((artist?.isEmpty == false ? artist : nil) ?? "Unknown Artist")
-                    .font(.caption)
-                    .foregroundStyle(Color.appTextSecondary)
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.appTextPrimary)
                     .lineLimit(1)
+                artistLineText(
+                    artist: artist ?? "",
+                    isCover: isCover,
+                    originalArtist: nil
+                )
+                .font(.caption)
+                .lineLimit(1)
             }
 
             Spacer(minLength: 8)

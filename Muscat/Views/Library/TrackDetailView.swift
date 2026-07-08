@@ -33,14 +33,12 @@ struct TrackDetailView: View {
                         .font(.title2.bold())
                         .foregroundStyle(Color.appTextPrimary)
                         .multilineTextAlignment(.center)
-                    Text(detail?.displayArtist ?? queue[safe: index]?.displayArtist ?? "")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.appTextSecondary)
-                    if let originalArtist = detail?.override?.originalArtist, detail?.isCover == true {
-                        Text("cover of \(originalArtist)")
-                            .font(.caption)
-                            .foregroundStyle(Color.appTextTertiary)
-                    }
+                    artistLineText(
+                        artist: detail?.displayArtist ?? queue[safe: index]?.displayArtist ?? "",
+                        isCover: detail?.isCover ?? false,
+                        originalArtist: detail?.override?.originalArtist
+                    )
+                    .font(.subheadline)
                 }
                 .padding(.horizontal, 24)
 
