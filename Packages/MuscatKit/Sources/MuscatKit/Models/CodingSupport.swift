@@ -1,10 +1,10 @@
 import Foundation
 
-/// The Muscat server emits snake_case JSON everywhere and dates as ISO-8601 strings
+/// The Podo server emits snake_case JSON everywhere and dates as ISO-8601 strings
 /// with millisecond fractional seconds (`Date.prototype.toJSON()` in Node). Foundation's
 /// built-in `.iso8601` strategy only parses whole-second precision, so decoding/encoding
 /// go through these shared formatters instead of relying on the default strategies.
-enum MuscatDateCoding {
+enum PodoDateCoding {
     static let withFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -39,21 +39,21 @@ enum MuscatDateCoding {
 }
 
 extension JSONDecoder {
-    /// Configured for every Muscat API response: snake_case keys, fractional ISO-8601 dates.
-    static var muscat: JSONDecoder {
+    /// Configured for every Podo API response: snake_case keys, fractional ISO-8601 dates.
+    static var podo: JSONDecoder {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .custom { try MuscatDateCoding.decode($0) }
+        decoder.dateDecodingStrategy = .custom { try PodoDateCoding.decode($0) }
         return decoder
     }
 }
 
 extension JSONEncoder {
-    /// Configured for every Muscat API request body: snake_case keys, fractional ISO-8601 dates.
-    static var muscat: JSONEncoder {
+    /// Configured for every Podo API request body: snake_case keys, fractional ISO-8601 dates.
+    static var podo: JSONEncoder {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
-        encoder.dateEncodingStrategy = .custom { try MuscatDateCoding.encode($0, to: $1) }
+        encoder.dateEncodingStrategy = .custom { try PodoDateCoding.encode($0, to: $1) }
         return encoder
     }
 }

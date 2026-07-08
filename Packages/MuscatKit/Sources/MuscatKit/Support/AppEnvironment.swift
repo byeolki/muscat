@@ -39,7 +39,7 @@ public final class AppEnvironment {
         request.timeoutInterval = 8
         guard let (data, response) = try? await URLSession.shared.data(for: request) else { return false }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { return false }
-        guard let health = try? JSONDecoder.muscat.decode(HealthResponse.self, from: data) else { return false }
+        guard let health = try? JSONDecoder.podo.decode(HealthResponse.self, from: data) else { return false }
         return health.status.lowercased() == "ok"
     }
 }

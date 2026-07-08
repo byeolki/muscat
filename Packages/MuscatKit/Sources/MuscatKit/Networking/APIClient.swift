@@ -1,7 +1,7 @@
 import Foundation
 
-/// Thin, hand-written REST client for the Muscat server. Every request/response body is
-/// snake_case JSON (see `JSONDecoder.muscat` / `JSONEncoder.muscat`). Handles automatic
+/// Thin, hand-written REST client for the Podo server. Every request/response body is
+/// snake_case JSON (see `JSONDecoder.podo` / `JSONEncoder.podo`). Handles automatic
 /// access-token refresh on 401: concurrent 401s coalesce onto a single in-flight
 /// refresh via the `refreshTask` actor property, and each request is retried at most once.
 public actor APIClient {
@@ -121,7 +121,7 @@ public actor APIClient {
         }
 
         guard (200..<300).contains(http.statusCode) else {
-            if let body = try? JSONDecoder.muscat.decode(ErrorResponseBody.self, from: data) {
+            if let body = try? JSONDecoder.podo.decode(ErrorResponseBody.self, from: data) {
                 throw APIClientError.server(statusCode: http.statusCode, message: body.message)
             }
             throw APIClientError.server(
@@ -144,7 +144,7 @@ public actor APIClient {
         }
 
         let task = Task<TokenPair, Error> {
-            let bodyData = try JSONEncoder.muscat.encode(RefreshRequest(refreshToken: refreshToken))
+            let bodyData = try JSONEncoder.podo.encode(RefreshRequest(refreshToken: refreshToken))
             let request = try self.buildRequest(
                 method: "POST", path: "api/v1/auth/refresh", query: [], bodyData: bodyData, authenticated: false
             )
@@ -152,7 +152,7 @@ public actor APIClient {
             guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
                 throw APIClientError.notAuthenticated
             }
-            let tokens = try JSONDecoder.muscat.decode(TokenPair.self, from: data)
+            let tokens = try JSONDecoder.podo.decode(TokenPair.self, from: data)
             self.tokenStore.save(tokens)
             return tokens
         }
@@ -170,12 +170,12 @@ public actor APIClient {
         body: Encodable? = nil,
         authenticated: Bool = true
     ) async throws -> Response {
-        let bodyData = try body.map { try JSONEncoder.muscat.encode($0) }
+        let bodyData = try body.map { try JSONEncoder.podo.encode($0) }
         let data = try await executeWithAuthRetry(
             method: method, path: path, query: query, bodyData: bodyData, authenticated: authenticated
         )
         do {
-            return try JSONDecoder.muscat.decode(Response.self, from: data)
+            return try JSONDecoder.podo.decode(Response.self, from: data)
         } catch {
             throw APIClientError.decoding(error)
         }
@@ -188,7 +188,7 @@ public actor APIClient {
         body: Encodable? = nil,
         authenticated: Bool = true
     ) async throws {
-        let bodyData = try body.map { try JSONEncoder.muscat.encode($0) }
+        let bodyData = try body.map { try JSONEncoder.podo.encode($0) }
         _ = try await executeWithAuthRetry(
             method: method, path: path, query: query, bodyData: bodyData, authenticated: authenticated
         )
@@ -219,7 +219,7 @@ public actor APIClient {
             contentType: "multipart/form-data; boundary=\(boundary)", authenticated: authenticated
         )
         do {
-            return try JSONDecoder.muscat.decode(Response.self, from: data)
+            return try JSONDecoder.podo.decode(Response.self, from: data)
         } catch {
             throw APIClientError.decoding(error)
         }
