@@ -19,7 +19,7 @@ final class CodingSupportTests: XCTestCase {
         {
             "id": "abc123", "title": "Song", "artist": null, "album_version_id": null,
             "track_number": null, "disc_number": null, "canonical_duration": 180,
-            "is_cover": false, "play_count": 0, "added_by": null,
+            "is_cover": false, "thumbnail_path": null, "play_count": 0, "added_by": null,
             "added_at": "2024-01-15T10:30:00.000Z", "updated_at": "2024-01-15T10:30:00.000Z",
             "deleted_at": null, "duration": 180, "artists": [{"name": "Someone"}],
             "has_video": false, "override": null, "favorite_count": 0, "is_favorited": false

@@ -6,14 +6,14 @@ import SwiftUI
 struct RawTrackRowView: View {
     let title: String
     let artist: String?
-    let albumVersionId: String?
+    let artworkId: String?
     let isCover: Bool
     let duration: Double?
 
     init(track: RawTrack) {
         title = track.title
         artist = track.artist
-        albumVersionId = track.albumVersionId
+        artworkId = track.artworkId
         isCover = track.isCover
         duration = track.durationSeconds
     }
@@ -21,14 +21,14 @@ struct RawTrackRowView: View {
     init(entry: PlaylistTrackEntry) {
         title = entry.title
         artist = entry.artist
-        albumVersionId = entry.albumVersionId
+        artworkId = entry.artworkId
         isCover = entry.isCover
         duration = entry.durationSeconds
     }
 
     var body: some View {
         HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: albumVersionId, cornerRadius: 8)
+            RemoteArtworkView(artworkId: artworkId, cornerRadius: 8)
                 .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 3) {

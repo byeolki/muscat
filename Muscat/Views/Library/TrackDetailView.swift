@@ -23,7 +23,7 @@ struct TrackDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                RemoteArtworkView(artworkId: detail?.albumVersionId, cornerRadius: 16)
+                RemoteArtworkView(artworkId: detail?.artworkId, cornerRadius: 16)
                     .frame(width: 240, height: 240)
                     .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
                     .padding(.top, 20)

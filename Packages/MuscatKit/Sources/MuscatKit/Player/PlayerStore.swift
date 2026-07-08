@@ -183,8 +183,8 @@ public final class PlayerStore {
         guard let currentTrack else { return }
         Task {
             var artworkURL: URL?
-            if fetchArtwork, let albumVersionId = currentTrack.albumVersionId {
-                artworkURL = await apiClient.artworkURL(id: albumVersionId)
+            if fetchArtwork, let artworkId = currentTrack.artworkId {
+                artworkURL = await apiClient.artworkURL(id: artworkId)
             }
             nowPlaying.update(
                 track: currentTrack,

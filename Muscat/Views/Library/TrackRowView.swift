@@ -6,7 +6,7 @@ struct TrackRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: track.albumVersionId, cornerRadius: 8)
+            RemoteArtworkView(artworkId: track.artworkId, cornerRadius: 8)
                 .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 3) {

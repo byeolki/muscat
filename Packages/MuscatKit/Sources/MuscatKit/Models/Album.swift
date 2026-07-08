@@ -29,6 +29,7 @@ public struct AlbumTrackEntry: Codable, Hashable, Identifiable {
     public let discNumber: Int?
     public let canonicalDuration: Double?
     public let isCover: Bool
+    public let thumbnailPath: String?
     public let playCount: Int
     public let addedBy: String?
     public let addedAt: Date
@@ -45,6 +46,12 @@ public struct AlbumTrackEntry: Codable, Hashable, Identifiable {
     /// to seconds for playback/display.
     public var durationSeconds: Double? {
         duration.map { $0 / 1000 }
+    }
+
+    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
+    /// id when it has a generated thumbnail.
+    public var artworkId: String? {
+        albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
 }
 
@@ -73,7 +80,7 @@ public extension QueueTrack {
             id: track.id,
             title: track.title,
             displayArtist: track.displayArtist,
-            albumVersionId: track.albumVersionId,
+            artworkId: track.artworkId,
             duration: track.durationSeconds
         )
     }

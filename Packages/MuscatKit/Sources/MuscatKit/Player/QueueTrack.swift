@@ -8,14 +8,17 @@ public struct QueueTrack: Identifiable, Hashable {
     public let id: String
     public let title: String
     public let displayArtist: String
-    public let albumVersionId: String?
+    /// Best available id to pass to `GET /artwork/:id` — album artwork if the track
+    /// belongs to one, else the track's own id when it has a generated thumbnail
+    /// (see each source type's `artworkId` computed property).
+    public let artworkId: String?
     public let duration: Double?
 
-    public init(id: String, title: String, displayArtist: String, albumVersionId: String?, duration: Double?) {
+    public init(id: String, title: String, displayArtist: String, artworkId: String?, duration: Double?) {
         self.id = id
         self.title = title
         self.displayArtist = displayArtist
-        self.albumVersionId = albumVersionId
+        self.artworkId = artworkId
         self.duration = duration
     }
 }
@@ -26,7 +29,7 @@ public extension QueueTrack {
             id: track.id,
             title: track.title,
             displayArtist: track.displayArtist,
-            albumVersionId: track.albumVersionId,
+            artworkId: track.artworkId,
             duration: track.durationSeconds
         )
     }
@@ -36,7 +39,7 @@ public extension QueueTrack {
             id: track.id,
             title: track.title,
             displayArtist: track.displayArtist,
-            albumVersionId: track.albumVersionId,
+            artworkId: track.artworkId,
             duration: track.durationSeconds
         )
     }
@@ -46,7 +49,7 @@ public extension QueueTrack {
             id: track.id,
             title: track.title,
             displayArtist: track.artist ?? "",
-            albumVersionId: track.albumVersionId,
+            artworkId: track.artworkId,
             duration: track.durationSeconds
         )
     }
@@ -56,7 +59,7 @@ public extension QueueTrack {
             id: track.id,
             title: track.title,
             displayArtist: track.displayArtist,
-            albumVersionId: track.albumVersionId,
+            artworkId: track.artworkId,
             duration: track.durationSeconds
         )
     }

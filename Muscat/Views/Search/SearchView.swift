@@ -21,7 +21,7 @@ struct SearchView: View {
                                 playerStore.play(
                                     tracks: [QueueTrack(
                                         id: hit.id, title: hit.name, displayArtist: hit.artist ?? "",
-                                        albumVersionId: nil, duration: nil
+                                        artworkId: nil, duration: nil
                                     )],
                                     startAt: 0
                                 )

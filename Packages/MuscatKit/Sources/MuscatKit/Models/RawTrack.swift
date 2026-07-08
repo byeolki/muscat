@@ -13,6 +13,7 @@ public struct RawTrack: Codable, Hashable, Identifiable {
     public let discNumber: Int?
     public let canonicalDuration: Double?
     public let isCover: Bool
+    public let thumbnailPath: String?
     public let playCount: Int
     public let addedBy: String?
     public let addedAt: Date
@@ -23,6 +24,12 @@ public struct RawTrack: Codable, Hashable, Identifiable {
     /// for playback/display.
     public var durationSeconds: Double? {
         canonicalDuration.map { $0 / 1000 }
+    }
+
+    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
+    /// id when it has a generated thumbnail.
+    public var artworkId: String? {
+        albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
 }
 
@@ -36,6 +43,7 @@ public struct PlaylistTrackEntry: Codable, Hashable, Identifiable {
     public let discNumber: Int?
     public let canonicalDuration: Double?
     public let isCover: Bool
+    public let thumbnailPath: String?
     public let playCount: Int
     public let addedBy: String?
     public let addedAt: Date
@@ -53,5 +61,11 @@ public struct PlaylistTrackEntry: Codable, Hashable, Identifiable {
     /// for playback/display.
     public var durationSeconds: Double? {
         canonicalDuration.map { $0 / 1000 }
+    }
+
+    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
+    /// id when it has a generated thumbnail.
+    public var artworkId: String? {
+        albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
 }
