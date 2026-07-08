@@ -20,7 +20,14 @@ struct RemoteArtworkView: View {
             if let resolvedURL {
                 AsyncImage(url: resolvedURL) { phase in
                     if let image = phase.image {
-                        image.resizable().aspectRatio(contentMode: .fill)
+                        // `aspectRatio(.fill)` alone lets a non-square source grow past
+                        // its container in one dimension; pin it back to the proposed
+                        // size before clipping, or it spills outside the rounded frame.
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .clipped()
                     } else {
                         placeholderIcon
                     }
