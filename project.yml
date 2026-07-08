@@ -1,34 +1,40 @@
-name: Podo
+name: Muscat
 options:
-  bundleIdPrefix: com.podo
+  bundleIdPrefix: com.muscat
   deploymentTarget:
     iOS: "17.0"
     macOS: "14.0"
   createIntermediateGroups: true
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: GFLR4AF99Z
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: Apple Development
 
 configs:
   Debug: debug
   Release: release
 
 packages:
-  PodoKit:
-    path: Packages/PodoKit
+  MuscatKit:
+    path: Packages/MuscatKit
 
 targets:
-  Podo-iOS:
+  Muscat-iOS:
     type: application
     platform: iOS
     sources:
-      - path: Podo
+      - path: Muscat
     dependencies:
-      - package: PodoKit
-        product: PodoKit
-      - target: PodoWidgetsExtension
+      - package: MuscatKit
+        product: MuscatKit
+      - target: MuscatWidgetsExtension
         embed: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.podo.client.ios
-        PRODUCT_NAME: Podo
+        PRODUCT_BUNDLE_IDENTIFIER: com.muscat.client.ios
+        PRODUCT_NAME: Muscat
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -37,9 +43,9 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SUPPORTS_MACCATALYST: false
     info:
-      path: Generated/Podo-iOS-Info.plist
+      path: Generated/Muscat-iOS-Info.plist
       properties:
-        CFBundleDisplayName: Podo
+        CFBundleDisplayName: Muscat
         UILaunchScreen: {}
         UIBackgroundModes:
           - audio
@@ -50,69 +56,69 @@ targets:
           including servers on your local network.
         NSSupportsLiveActivities: true
 
-  PodoWidgetsExtension:
+  MuscatWidgetsExtension:
     type: app-extension
     platform: iOS
     sources:
-      - path: PodoWidgets
+      - path: MuscatWidgets
     dependencies:
-      - package: PodoKit
-        product: PodoKit
+      - package: MuscatKit
+        product: MuscatKit
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.podo.client.ios.widgets
-        PRODUCT_NAME: PodoWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.muscat.client.ios.widgets
+        PRODUCT_NAME: MuscatWidgets
         SWIFT_VERSION: "5.0"
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         SKIP_INSTALL: true
     info:
-      path: Generated/PodoWidgets-Info.plist
+      path: Generated/MuscatWidgets-Info.plist
       properties:
-        CFBundleDisplayName: Podo Widgets
+        CFBundleDisplayName: Muscat Widgets
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
-  Podo-macOS:
+  Muscat-macOS:
     type: application
     platform: macOS
     sources:
-      - path: Podo
+      - path: Muscat
     dependencies:
-      - package: PodoKit
-        product: PodoKit
+      - package: MuscatKit
+        product: MuscatKit
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.podo.client.mac
-        PRODUCT_NAME: Podo
+        PRODUCT_BUNDLE_IDENTIFIER: com.muscat.client.mac
+        PRODUCT_NAME: Muscat
         SWIFT_VERSION: "5.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         ENABLE_HARDENED_RUNTIME: true
-        CODE_SIGN_ENTITLEMENTS: Entitlements/Podo-macOS.entitlements
+        CODE_SIGN_ENTITLEMENTS: Entitlements/Muscat-macOS.entitlements
     info:
-      path: Generated/Podo-macOS-Info.plist
+      path: Generated/Muscat-macOS-Info.plist
       properties:
-        CFBundleDisplayName: Podo
+        CFBundleDisplayName: Muscat
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
 
 schemes:
-  Podo-iOS:
+  Muscat-iOS:
     build:
       targets:
-        Podo-iOS: all
-        PodoWidgetsExtension: all
+        Muscat-iOS: all
+        MuscatWidgetsExtension: all
     run:
       config: Debug
     test:
       config: Debug
-  Podo-macOS:
+  Muscat-macOS:
     build:
       targets:
-        Podo-macOS: all
+        Muscat-macOS: all
     run:
       config: Debug
     test:

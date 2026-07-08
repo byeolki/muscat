@@ -10,34 +10,34 @@ This was written without a working Xcode/Swift toolchain — **it has never been
 brew install xcodegen
 cd muscat
 xcodegen generate
-open Podo.xcodeproj
+open Muscat.xcodeproj
 ```
 
-Set a signing Team on each target (`Podo-iOS`, `Podo-macOS`, `PodoWidgetsExtension`) in Signing & Capabilities, then run the `Podo-iOS` or `Podo-macOS` scheme. Re-run `xcodegen generate` after any change to `project.yml` or the source folders — the `.xcodeproj` is a generated artifact and isn't committed.
+Set a signing Team on each target (`Muscat-iOS`, `Muscat-macOS`, `MuscatWidgetsExtension`) in Signing & Capabilities, then run the `Muscat-iOS` or `Muscat-macOS` scheme. Re-run `xcodegen generate` after any change to `project.yml` or the source folders — the `.xcodeproj` is a generated artifact and isn't committed.
 
 ## Targets
 
 | Target | Platform | Notes |
 |---|---|---|
-| `Podo-iOS` | iOS 17+ | Embeds `PodoWidgetsExtension` |
-| `Podo-macOS` | macOS 14+ | App Sandbox + network client entitlement |
-| `PodoWidgetsExtension` | iOS 17+ | Live Activity / Dynamic Island only |
+| `Muscat-iOS` | iOS 17+ | Embeds `MuscatWidgetsExtension` |
+| `Muscat-macOS` | macOS 14+ | App Sandbox + network client entitlement |
+| `MuscatWidgetsExtension` | iOS 17+ | Live Activity / Dynamic Island only |
 
 ## Project structure
 
 ```
-Podo/            app target — views only, no business logic
-PodoWidgets/     Live Activity / Dynamic Island widget extension
-Packages/PodoKit/  local Swift package — networking, auth, player, models
+Muscat/            app target — views only, no business logic
+MuscatWidgets/     Live Activity / Dynamic Island widget extension
+Packages/MuscatKit/  local Swift package — networking, auth, player, models
 ```
 
-`PodoKit` has no view code and is shared by both `Podo` and `PodoWidgets`.
+`MuscatKit` has no view code and is shared by both `Muscat` and `MuscatWidgets`.
 
 ## Architecture
 
-- **APIClient** (`PodoKit/Networking`) — actor-isolated, snake_case JSON throughout to match the server. A 401 triggers a single coalesced refresh (concurrent requests share one in-flight refresh call) and one retry per request; refresh failure clears the session and signals the app to log out.
+- **APIClient** (`MuscatKit/Networking`) — actor-isolated, snake_case JSON throughout to match the server. A 401 triggers a single coalesced refresh (concurrent requests share one in-flight refresh call) and one retry per request; refresh failure clears the session and signals the app to log out.
 - **AVPlayer, not AVAudioEngine** — the spec called for `AVAudioEngine` for EQ/crossfade, but it can't consume a network stream directly (buffers/files only). EQ on a live stream needs `MTAudioProcessingTap`, which wasn't worth writing blind. `AVPlayer` handles streaming/decoding now; a tap on `AVPlayerItem` is the extension point for EQ later.
-- **QueueTrack** (`PodoKit/Player`) — every endpoint that returns tracks uses a different shape (library list, playlist/favorites raw rows with no override resolution, album entries, search hits, radio). The playback queue only deals in this one thin type; each source converts into it via `QueueTrack(_:)`.
+- **QueueTrack** (`MuscatKit/Player`) — every endpoint that returns tracks uses a different shape (library list, playlist/favorites raw rows with no override resolution, album entries, search hits, radio). The playback queue only deals in this one thin type; each source converts into it via `QueueTrack(_:)`.
 - **Keychain-backed auth** — tokens never touch UserDefaults; only the server URL does (not sensitive).
 - **@Observable stores** (`AuthStore`, `PlayerStore`) injected via `.environment(...)`, consumed with `@Environment(Type.self)`.
 
