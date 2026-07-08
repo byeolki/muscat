@@ -3,9 +3,8 @@ import MuscatKit
 import SwiftUI
 import WidgetKit
 
-/// App accent, duplicated here because the widget extension doesn't compile the app
-/// target's Theme.swift and MuscatKit deliberately has no UI code.
-private let accent = Color(red: 184 / 255, green: 209 / 255, blue: 72 / 255)
+/// Shared palette from MuscatKit's design system.
+private let accent = Color.appAccent
 
 /// Lock screen + Dynamic Island UI for `PlaybackActivityAttributes` (defined in
 /// MuscatKit so both the app and this extension share the same type). Text-only by
@@ -14,7 +13,7 @@ struct PlaybackLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: PlaybackActivityAttributes.self) { context in
             LockScreenView(state: context.state)
-                .activityBackgroundTint(Color(red: 0.04, green: 0.04, blue: 0.04))
+                .activityBackgroundTint(Color.appBackground)
                 .activitySystemActionForegroundColor(accent)
         } dynamicIsland: { context in
             DynamicIsland {

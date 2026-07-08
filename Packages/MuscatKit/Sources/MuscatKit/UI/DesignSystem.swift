@@ -1,11 +1,15 @@
 import SwiftUI
 
+// Lives in MuscatKit (not the app target) so that adding/changing design-system code
+// never requires regenerating the .xcodeproj — SPM globs package sources at build
+// time, while the XcodeGen project references app-target files explicitly.
+
 // MARK: - Palette
 
 /// Design tokens for the whole app. Dark-only theme (the app forces
 /// `.preferredColorScheme(.dark)` at the root), lime accent matching the
 /// Podo web dashboard's aesthetic.
-extension Color {
+public extension Color {
     init(hex: UInt32) {
         self.init(
             .sRGB,
@@ -38,10 +42,14 @@ extension Color {
 
 /// Filled lime pill — the one primary action per screen. Black text on the
 /// light accent for contrast (Spotify-style).
-struct AccentButtonStyle: ButtonStyle {
-    var fullWidth = false
+public struct AccentButtonStyle: ButtonStyle {
+    public var fullWidth: Bool
 
-    func makeBody(configuration: Configuration) -> some View {
+    public init(fullWidth: Bool = false) {
+        self.fullWidth = fullWidth
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.body.weight(.semibold))
             .foregroundStyle(.black)
@@ -58,8 +66,10 @@ struct AccentButtonStyle: ButtonStyle {
 }
 
 /// Dark card button with a hairline border — secondary actions and icon wells.
-struct SurfaceButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct SurfaceButtonStyle: ButtonStyle {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.body.weight(.medium))
             .foregroundStyle(Color.appTextPrimary)
@@ -80,10 +90,11 @@ struct SurfaceButtonStyle: ButtonStyle {
 
 // MARK: - Fields
 
-/// Dark rounded input well. Apply to `TextField`/`SecureField` after
-/// `.textFieldStyle(.plain)` is implied by the modifier itself.
-struct ThemedField: ViewModifier {
-    func body(content: Content) -> some View {
+/// Dark rounded input well for `TextField`/`SecureField`.
+public struct ThemedField: ViewModifier {
+    public init() {}
+
+    public func body(content: Content) -> some View {
         content
             .textFieldStyle(.plain)
             .padding(.horizontal, 14)
@@ -98,7 +109,7 @@ struct ThemedField: ViewModifier {
 
 // MARK: - Screens & lists
 
-extension View {
+public extension View {
     func themedField() -> some View {
         modifier(ThemedField())
     }
@@ -125,11 +136,16 @@ extension View {
 }
 
 /// Shared empty-state / error placeholder.
-struct EmptyStateView: View {
-    let systemImage: String
-    let message: String
+public struct EmptyStateView: View {
+    public let systemImage: String
+    public let message: String
 
-    var body: some View {
+    public init(systemImage: String, message: String) {
+        self.systemImage = systemImage
+        self.message = message
+    }
+
+    public var body: some View {
         VStack(spacing: 10) {
             Image(systemName: systemImage)
                 .font(.system(size: 34, weight: .light))
@@ -144,10 +160,14 @@ struct EmptyStateView: View {
 }
 
 /// Inline error banner used beneath forms/lists.
-struct ErrorBanner: View {
-    let message: String
+public struct ErrorBanner: View {
+    public let message: String
 
-    var body: some View {
+    public init(message: String) {
+        self.message = message
+    }
+
+    public var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.caption)
