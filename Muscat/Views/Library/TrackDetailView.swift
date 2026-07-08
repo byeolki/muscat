@@ -14,11 +14,25 @@ struct TrackDetailView: View {
     var initialIsFavorited = false
 
     @State private var detail: TrackDetail?
-    @State private var lyrics: LyricsResponse?
+    @State private var lyricsOptions: [LyricsResponse] = []
+    @State private var selectedLyricsLanguage: String?
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var isFavorited = false
     @State private var showVideo = false
+
+    /// Synced (timed) entries first, since they're the more useful format once real
+    /// sync-to-playback highlighting exists; stable otherwise.
+    private var sortedLyricsOptions: [LyricsResponse] {
+        lyricsOptions.sorted { a, b in
+            a.type != b.type && a.type == .synced
+        }
+    }
+
+    private var selectedLyrics: LyricsResponse? {
+        guard let selectedLyricsLanguage else { return sortedLyricsOptions.first }
+        return sortedLyricsOptions.first { $0.language == selectedLyricsLanguage } ?? sortedLyricsOptions.first
+    }
 
     var body: some View {
         ScrollView {
@@ -83,13 +97,38 @@ struct TrackDetailView: View {
                     }
                 }
 
-                if let lyrics {
+                if let selectedLyrics {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("LYRICS")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color.appTextTertiary)
-                            .kerning(0.8)
-                        Text(lyrics.content)
+                        HStack {
+                            Text("LYRICS")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.appTextTertiary)
+                                .kerning(0.8)
+                            Spacer()
+                            if sortedLyricsOptions.count > 1 {
+                                Menu {
+                                    ForEach(sortedLyricsOptions) { option in
+                                        Button {
+                                            selectedLyricsLanguage = option.language
+                                        } label: {
+                                            if option.language == selectedLyrics.language {
+                                                Label(option.languageDisplayName, systemImage: "checkmark")
+                                            } else {
+                                                Text(option.languageDisplayName)
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text(selectedLyrics.languageDisplayName)
+                                        Image(systemName: "chevron.up.chevron.down")
+                                    }
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(Color.appAccent)
+                                }
+                            }
+                        }
+                        Text(selectedLyrics.displayText)
                             .font(.callout)
                             .foregroundStyle(Color.appTextSecondary)
                             .lineSpacing(5)
@@ -144,7 +183,8 @@ struct TrackDetailView: View {
             async let detailResult = appEnvironment.apiClient.fetchTrack(id: trackId)
             async let lyricsResult = appEnvironment.apiClient.fetchLyrics(trackId: trackId)
             detail = try await detailResult
-            lyrics = try? await lyricsResult
+            lyricsOptions = (try? await lyricsResult) ?? []
+            selectedLyricsLanguage = nil
         } catch {
             errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }

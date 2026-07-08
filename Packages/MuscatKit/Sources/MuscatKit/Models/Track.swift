@@ -199,12 +199,42 @@ public struct FavoriteToggleResponse: Codable {
     public let favorited: Bool
 }
 
-public struct LyricsResponse: Codable {
+/// The server now keys `lyrics` by `(track_id, language)` and both lyrics endpoints
+/// return every stored language as an array (`[]` if none), not a single object/null.
+public struct LyricsResponse: Codable, Hashable, Identifiable {
     public let trackId: String
+    /// ISO 639-1-ish code (e.g. "en", "ko"), or `"und"` for legacy/undetermined rows.
+    public let language: String
     public let type: LyricsType
     public let content: String
     public let source: LyricsSource
     public let updatedAt: Date
+
+    public var id: String { "\(trackId)-\(language)" }
+
+    /// `.synced` content is stored as LRC-style `[mm:ss.ff]text` lines (parsed
+    /// server-side from yt-dlp's manual subtitle tracks) — strip the timestamps for a
+    /// plain read view. Actual sync-to-playback highlighting is a future extension.
+    public var displayText: String {
+        guard type == .synced else { return content }
+        let timestampPrefix = try? NSRegularExpression(pattern: #"^\[\d{2}:\d{2}(?:\.\d{1,3})?\]"#)
+        return content
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { line -> String in
+                let line = String(line)
+                guard let timestampPrefix else { return line }
+                let range = NSRange(line.startIndex..., in: line)
+                return timestampPrefix.stringByReplacingMatches(in: line, range: range, withTemplate: "")
+            }
+            .joined(separator: "\n")
+    }
+
+    /// Human-readable language name for a picker ("English", "Korean"), falling back
+    /// to the raw code for anything `Locale` doesn't recognize (including `"und"`).
+    public var languageDisplayName: String {
+        guard language != "und" else { return "Unknown" }
+        return Locale.current.localizedString(forLanguageCode: language)?.capitalized ?? language.uppercased()
+    }
 }
 
 public enum LyricsType: String, Codable {
