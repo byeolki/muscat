@@ -12,13 +12,25 @@ public struct QueueTrack: Identifiable, Hashable {
     /// belongs to one, else the track's own id when it has a generated thumbnail
     /// (see each source type's `artworkId` computed property).
     public let artworkId: String?
+    /// Used only if `artworkId` turns out to have no artwork file on disk (the server
+    /// checks whatever id it's given against albums/playlists/track thumbnails purely
+    /// by id, so an album with no art 404s instead of trying the track's thumbnail).
+    public let fallbackArtworkId: String?
     public let duration: Double?
 
-    public init(id: String, title: String, displayArtist: String, artworkId: String?, duration: Double?) {
+    public init(
+        id: String,
+        title: String,
+        displayArtist: String,
+        artworkId: String?,
+        fallbackArtworkId: String? = nil,
+        duration: Double?
+    ) {
         self.id = id
         self.title = title
         self.displayArtist = displayArtist
         self.artworkId = artworkId
+        self.fallbackArtworkId = fallbackArtworkId
         self.duration = duration
     }
 }
@@ -30,6 +42,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             artworkId: track.artworkId,
+            fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds
         )
     }
@@ -40,6 +53,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             artworkId: track.artworkId,
+            fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds
         )
     }
@@ -50,6 +64,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.artist ?? "",
             artworkId: track.artworkId,
+            fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds
         )
     }
@@ -60,6 +75,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             artworkId: track.artworkId,
+            fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds
         )
     }

@@ -7,6 +7,7 @@ struct RawTrackRowView: View {
     let title: String
     let artist: String?
     let artworkId: String?
+    let fallbackArtworkId: String?
     let isCover: Bool
     let duration: Double?
 
@@ -14,6 +15,7 @@ struct RawTrackRowView: View {
         title = track.title
         artist = track.artist
         artworkId = track.artworkId
+        fallbackArtworkId = track.fallbackArtworkId
         isCover = track.isCover
         duration = track.durationSeconds
     }
@@ -22,13 +24,14 @@ struct RawTrackRowView: View {
         title = entry.title
         artist = entry.artist
         artworkId = entry.artworkId
+        fallbackArtworkId = entry.fallbackArtworkId
         isCover = entry.isCover
         duration = entry.durationSeconds
     }
 
     var body: some View {
         HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: artworkId, cornerRadius: 8)
+            RemoteArtworkView(artworkId: artworkId, fallbackArtworkId: fallbackArtworkId, cornerRadius: 8)
                 .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 3) {

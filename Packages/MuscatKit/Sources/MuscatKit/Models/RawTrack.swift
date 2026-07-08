@@ -31,6 +31,15 @@ public struct RawTrack: Codable, Hashable, Identifiable {
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
+
+    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk —
+    /// the artwork endpoint checks whatever id it's given against albums, then
+    /// playlists, then track thumbnails, so an album with no art on disk 404s instead
+    /// of silently trying the track's own thumbnail.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
+    }
 }
 
 /// A `RawTrack` plus its position within a playlist (`GET /playlists/:id`).
@@ -67,5 +76,11 @@ public struct PlaylistTrackEntry: Codable, Hashable, Identifiable {
     /// id when it has a generated thumbnail.
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
+    }
+
+    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
     }
 }

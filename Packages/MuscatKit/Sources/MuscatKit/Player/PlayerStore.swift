@@ -183,15 +183,22 @@ public final class PlayerStore {
         guard let currentTrack else { return }
         Task {
             var artworkURL: URL?
-            if fetchArtwork, let artworkId = currentTrack.artworkId {
-                artworkURL = await apiClient.artworkURL(id: artworkId)
+            var fallbackArtworkURL: URL?
+            if fetchArtwork {
+                if let artworkId = currentTrack.artworkId {
+                    artworkURL = await apiClient.artworkURL(id: artworkId)
+                }
+                if let fallbackArtworkId = currentTrack.fallbackArtworkId {
+                    fallbackArtworkURL = await apiClient.artworkURL(id: fallbackArtworkId)
+                }
             }
             nowPlaying.update(
                 track: currentTrack,
                 currentSeconds: currentSeconds,
                 duration: duration,
                 isPlaying: isPlaying,
-                artworkURL: artworkURL
+                artworkURL: artworkURL,
+                fallbackArtworkURL: fallbackArtworkURL
             )
         }
     }

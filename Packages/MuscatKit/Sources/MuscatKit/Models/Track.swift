@@ -105,6 +105,16 @@ public struct Track: Codable, Hashable, Identifiable {
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
+
+    /// The server checks `artworkId` against albums, then playlists, then track
+    /// thumbnails, purely by id — it has no idea `albumVersionId` was meant to be "the"
+    /// artwork, so an album with no artwork file on disk 404s instead of falling back.
+    /// This is the client-side fallback for that case: the track's own id, only
+    /// meaningful when it's different from `artworkId` and actually has a thumbnail.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
+    }
 }
 
 /// `GET /tracks/:id` detail shape. `title`/`is_cover`/`track_number`/`disc_number` are
@@ -162,6 +172,13 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
     /// id when it has a generated thumbnail.
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
+    }
+
+    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk —
+    /// see `Track.fallbackArtworkId` for why this is needed at all.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
     }
 }
 

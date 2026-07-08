@@ -26,7 +26,7 @@ struct MiniPlayerBar: View {
         if let track = playerStore.currentTrack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    RemoteArtworkView(artworkId: track.artworkId, cornerRadius: 10)
+                    RemoteArtworkView(artworkId: track.artworkId, fallbackArtworkId: track.fallbackArtworkId, cornerRadius: 10)
                         .frame(width: 40, height: 40)
 
                     VStack(alignment: .leading, spacing: 2) {

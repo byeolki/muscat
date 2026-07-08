@@ -53,6 +53,12 @@ public struct AlbumTrackEntry: Codable, Hashable, Identifiable {
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
+
+    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
+    }
 }
 
 public struct AlbumVersion: Codable, Hashable, Identifiable {
@@ -81,6 +87,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             artworkId: track.artworkId,
+            fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds
         )
     }
