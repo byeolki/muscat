@@ -6,6 +6,9 @@ struct PlaylistDetailView: View {
     @Environment(PlayerStore.self) private var playerStore
     @Environment(AuthStore.self) private var authStore
     @Environment(\.dismiss) private var dismiss
+    #if os(iOS)
+    @Environment(\.editMode) private var editMode
+    #endif
 
     let playlistId: String
 
@@ -126,7 +129,14 @@ struct PlaylistDetailView: View {
             #if os(iOS)
             if isOwner {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                    Button {
+                        withAnimation {
+                            editMode?.wrappedValue = editMode?.wrappedValue.isEditing == true ? .inactive : .active
+                        }
+                    } label: {
+                        Image(systemName: editMode?.wrappedValue.isEditing == true ? "checkmark.circle.fill" : "arrow.up.arrow.down.circle")
+                            .foregroundStyle(Color.appAccent)
+                    }
                 }
             }
             #endif
