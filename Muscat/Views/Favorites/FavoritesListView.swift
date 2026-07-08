@@ -20,6 +20,7 @@ struct FavoritesListView: View {
                     NavigationLink(value: entry.track.id) {
                         RawTrackRowView(track: entry.track)
                     }
+                    .themedRow()
                     .contextMenu {
                         Button {
                             playerStore.play(tracks: queue, startAt: index)
@@ -34,6 +35,8 @@ struct FavoritesListView: View {
                     }
                 }
             }
+            .listStyle(.plain)
+            .themedList()
             .navigationTitle("Favorites")
             .navigationDestination(for: String.self) { trackId in
                 if let index = favorites.firstIndex(where: { $0.track.id == trackId }) {
@@ -42,15 +45,9 @@ struct FavoritesListView: View {
             }
             .overlay {
                 if isLoading && favorites.isEmpty {
-                    ProgressView()
+                    ProgressView().tint(Color.appAccent)
                 } else if favorites.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "heart")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
-                        Text(errorMessage ?? "No favorited tracks yet.")
-                            .foregroundStyle(.secondary)
-                    }
+                    EmptyStateView(systemImage: "heart", message: errorMessage ?? "No favorited tracks yet.")
                 }
             }
             .refreshable { await load() }

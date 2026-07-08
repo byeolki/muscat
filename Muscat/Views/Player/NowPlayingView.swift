@@ -11,101 +11,190 @@ struct NowPlayingView: View {
     @State private var isScrubbing = false
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            // Soft accent glow behind the artwork so the screen isn't a flat void.
+            RadialGradient(
+                colors: [Color.appAccent.opacity(0.10), .clear],
+                center: .init(x: 0.5, y: 0.32),
+                startRadius: 20,
+                endRadius: 420
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                header
+
                 if let track = playerStore.currentTrack {
-                    RemoteArtworkView(artworkId: track.albumVersionId, cornerRadius: 16)
-                        .frame(width: 280, height: 280)
-                        .padding(.top, 24)
+                    Spacer(minLength: 12)
+
+                    RemoteArtworkView(artworkId: track.albumVersionId, cornerRadius: 20)
+                        .frame(width: 300, height: 300)
+                        .shadow(color: .black.opacity(0.55), radius: 28, y: 14)
+
+                    Spacer(minLength: 12)
 
                     VStack(spacing: 6) {
                         Text(track.title)
                             .font(.title2.bold())
+                            .foregroundStyle(Color.appTextPrimary)
                             .multilineTextAlignment(.center)
+                            .lineLimit(2)
                         Text(track.displayArtist)
-                            .font(.headline)
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.appTextSecondary)
+                            .lineLimit(1)
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 28)
 
-                    VStack(spacing: 4) {
-                        Slider(
-                            value: Binding(
-                                get: { scrubPosition ?? playerStore.currentSeconds },
-                                set: { scrubPosition = $0 }
-                            ),
-                            in: 0...(max(playerStore.duration ?? 1, 1)),
-                            onEditingChanged: { editing in
-                                isScrubbing = editing
-                                if !editing, let scrubPosition {
-                                    Task {
-                                        await playerStore.seek(toSeconds: scrubPosition)
-                                        self.scrubPosition = nil
-                                    }
-                                }
-                            }
-                        )
-                        HStack {
-                            Text(TrackRowView.formatted(scrubPosition ?? playerStore.currentSeconds))
-                            Spacer()
-                            Text(TrackRowView.formatted(playerStore.duration ?? 0))
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                    }
-                    .padding(.horizontal)
+                    scrubber
+                        .padding(.horizontal, 28)
+                        .padding(.top, 20)
 
-                    HStack(spacing: 40) {
-                        Button {
-                            playerStore.skipToPrevious()
-                        } label: {
-                            Image(systemName: "backward.fill").font(.title)
-                        }
-                        .disabled(!playerStore.hasPrevious && playerStore.currentSeconds <= 3)
-
-                        Button {
-                            playerStore.togglePlayPause()
-                        } label: {
-                            Image(systemName: playerStore.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                .font(.system(size: 56))
-                        }
-
-                        Button {
-                            playerStore.skipToNext()
-                        } label: {
-                            Image(systemName: "forward.fill").font(.title)
-                        }
-                        .disabled(!playerStore.hasNext)
-
-                        Button {
-                            playerStore.cycleRepeatMode()
-                        } label: {
-                            Image(systemName: playerStore.repeatMode == .one ? "repeat.1" : "repeat")
-                                .font(.title2)
-                                .foregroundStyle(playerStore.repeatMode == .off ? .secondary : Color.accentColor)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 8)
+                    transportControls
+                        .padding(.top, 18)
 
                     if let errorMessage = playerStore.errorMessage {
-                        Text(errorMessage)
-                            .font(.footnote)
-                            .foregroundStyle(.red)
+                        ErrorBanner(message: errorMessage)
+                            .padding(.horizontal, 28)
+                            .padding(.top, 12)
                     }
-                } else {
-                    Text("Nothing is playing.")
-                        .foregroundStyle(.secondary)
-                }
 
-                Spacer()
-            }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
+                    Spacer(minLength: 28)
+                } else {
+                    Spacer()
+                    EmptyStateView(systemImage: "music.note", message: "Nothing is playing.")
+                    Spacer()
                 }
             }
         }
+        #if os(macOS)
+        .frame(minWidth: 420, minHeight: 640)
+        #endif
+    }
+
+    private var header: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.appTextSecondary)
+                    .frame(width: 34, height: 34)
+                    .background(Color.appSurfaceRaised, in: Circle())
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Text("Now Playing")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appTextTertiary)
+                .kerning(1.2)
+                .textCase(.uppercase)
+
+            Spacer()
+
+            // Balances the close button so the title stays centered.
+            Color.clear.frame(width: 34, height: 34)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 18)
+    }
+
+    private var scrubber: some View {
+        VStack(spacing: 6) {
+            Slider(
+                value: Binding(
+                    get: { scrubPosition ?? playerStore.currentSeconds },
+                    set: { scrubPosition = $0 }
+                ),
+                in: 0...(max(playerStore.duration ?? 1, 1)),
+                onEditingChanged: { editing in
+                    isScrubbing = editing
+                    if !editing, let scrubPosition {
+                        Task {
+                            await playerStore.seek(toSeconds: scrubPosition)
+                            self.scrubPosition = nil
+                        }
+                    }
+                }
+            )
+            .tint(Color.appAccent)
+
+            HStack {
+                Text(TrackRowView.formatted(scrubPosition ?? playerStore.currentSeconds))
+                Spacer()
+                Text(TrackRowView.formatted(playerStore.duration ?? 0))
+            }
+            .font(.caption)
+            .foregroundStyle(Color.appTextTertiary)
+            .monospacedDigit()
+        }
+    }
+
+    private var transportControls: some View {
+        HStack(spacing: 0) {
+            Button {
+                playerStore.cycleRepeatMode()
+            } label: {
+                Image(systemName: playerStore.repeatMode == .one ? "repeat.1" : "repeat")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(playerStore.repeatMode == .off ? Color.appTextTertiary : Color.appAccent)
+                    .frame(width: 52, height: 52)
+                    .contentShape(Rectangle())
+            }
+
+            Spacer()
+
+            Button {
+                playerStore.skipToPrevious()
+            } label: {
+                Image(systemName: "backward.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(canGoBack ? Color.appTextPrimary : Color.appTextTertiary)
+                    .frame(width: 52, height: 52)
+                    .contentShape(Rectangle())
+            }
+            .disabled(!canGoBack)
+
+            Spacer()
+
+            Button {
+                playerStore.togglePlayPause()
+            } label: {
+                Image(systemName: playerStore.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(.black)
+                    .frame(width: 72, height: 72)
+                    .background(Color.appAccent, in: Circle())
+                    .shadow(color: Color.appAccent.opacity(0.35), radius: 16, y: 4)
+            }
+
+            Spacer()
+
+            Button {
+                playerStore.skipToNext()
+            } label: {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(playerStore.hasNext ? Color.appTextPrimary : Color.appTextTertiary)
+                    .frame(width: 52, height: 52)
+                    .contentShape(Rectangle())
+            }
+            .disabled(!playerStore.hasNext)
+
+            Spacer()
+
+            // Balances the repeat button so play stays visually centered.
+            Color.clear.frame(width: 52, height: 52)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 24)
+    }
+
+    private var canGoBack: Bool {
+        playerStore.hasPrevious || playerStore.currentSeconds > 3
     }
 }

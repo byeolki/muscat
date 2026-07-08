@@ -14,32 +14,101 @@ struct AdminStorageView: View {
         return formatter
     }()
 
+    private var diskUsedFraction: Double {
+        guard let stats, stats.disk.totalBytes > 0 else { return 0 }
+        return Double(stats.disk.usedBytes) / Double(stats.disk.totalBytes)
+    }
+
     var body: some View {
         List {
             if let stats {
-                Section("Disk") {
-                    LabeledContent("Total", value: byteFormatter.string(fromByteCount: Int64(stats.disk.totalBytes)))
-                    LabeledContent("Used", value: byteFormatter.string(fromByteCount: Int64(stats.disk.usedBytes)))
-                    LabeledContent("Free", value: byteFormatter.string(fromByteCount: Int64(stats.disk.freeBytes)))
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Disk")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.appTextPrimary)
+                            Spacer()
+                            Text("\(Int((diskUsedFraction * 100).rounded()))% used")
+                                .font(.caption)
+                                .foregroundStyle(Color.appTextSecondary)
+                        }
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.appBorder)
+                                Capsule()
+                                    .fill(Color.appAccent)
+                                    .frame(width: geometry.size.width * diskUsedFraction)
+                            }
+                        }
+                        .frame(height: 6)
+                        HStack {
+                            statLabel("Used", bytes: stats.disk.usedBytes)
+                            Spacer()
+                            statLabel("Free", bytes: stats.disk.freeBytes)
+                            Spacer()
+                            statLabel("Total", bytes: stats.disk.totalBytes)
+                        }
+                    }
+                    .padding(16)
+                    .background(Color.appSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
-                Section("Directories") {
-                    LabeledContent("Uploads", value: byteFormatter.string(fromByteCount: Int64(stats.uploadDir.sizeBytes)))
-                    LabeledContent("Artwork", value: byteFormatter.string(fromByteCount: Int64(stats.artworkDir.sizeBytes)))
-                    LabeledContent("Transcode Cache", value: byteFormatter.string(fromByteCount: Int64(stats.transcodeCache.sizeBytes)))
+
+                Section {
+                    directoryRow(name: "Uploads", bytes: stats.uploadDir.sizeBytes)
+                    directoryRow(name: "Artwork", bytes: stats.artworkDir.sizeBytes)
+                    directoryRow(name: "Transcode Cache", bytes: stats.transcodeCache.sizeBytes)
+                } header: {
+                    Text("DIRECTORIES")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.appTextTertiary)
+                        .kerning(0.8)
                 }
             }
             if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                ErrorBanner(message: errorMessage)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.plain)
+        .themedList()
         .navigationTitle("Storage Usage")
         .overlay {
             if isLoading && stats == nil {
-                ProgressView()
+                ProgressView().tint(Color.appAccent)
             }
         }
         .refreshable { await load() }
         .task { await load() }
+    }
+
+    private func statLabel(_ title: String, bytes: Int) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(Color.appTextTertiary)
+            Text(byteFormatter.string(fromByteCount: Int64(bytes)))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Color.appTextPrimary)
+                .monospacedDigit()
+        }
+    }
+
+    private func directoryRow(name: String, bytes: Int) -> some View {
+        HStack {
+            Text(name)
+                .font(.subheadline)
+                .foregroundStyle(Color.appTextPrimary)
+            Spacer()
+            Text(byteFormatter.string(fromByteCount: Int64(bytes)))
+                .font(.subheadline)
+                .foregroundStyle(Color.appTextSecondary)
+                .monospacedDigit()
+        }
+        .themedRow()
     }
 
     private func load() async {

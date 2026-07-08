@@ -10,35 +10,41 @@ struct ServerURLView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Spacer()
+        VStack(spacing: 0) {
+            Spacer()
 
-                VStack(spacing: 8) {
+            VStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.appAccent.opacity(0.12))
+                        .frame(width: 88, height: 88)
                     Image(systemName: "server.rack")
-                        .font(.system(size: 44))
-                        .foregroundStyle(.tint)
-                    Text("Enter Your Podo Server Address")
-                        .font(.title2.bold())
-                    Text("Enter the address of your self-hosted Podo server.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                        .font(.system(size: 36, weight: .light))
+                        .foregroundStyle(Color.appAccent)
                 }
 
+                Text("Connect to Podo")
+                    .font(.title.bold())
+                    .foregroundStyle(Color.appTextPrimary)
+
+                Text("Enter the address of your self-hosted Podo server.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.appTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.bottom, 36)
+
+            VStack(spacing: 16) {
                 TextField("https://music.example.com", text: $urlText)
                     #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     #endif
                     .autocorrectionDisabled()
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal)
+                    .themedField()
 
                 if let errorMessage {
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
+                    ErrorBanner(message: errorMessage)
                 }
 
                 Button {
@@ -46,19 +52,23 @@ struct ServerURLView: View {
                 } label: {
                     if isChecking {
                         ProgressView()
+                            .frame(maxWidth: .infinity)
                     } else {
                         Text("Connect")
-                            .frame(maxWidth: .infinity)
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(AccentButtonStyle(fullWidth: true))
                 .disabled(urlText.trimmingCharacters(in: .whitespaces).isEmpty || isChecking)
-                .padding(.horizontal)
-
-                Spacer()
+                .opacity(urlText.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
             }
-            .padding()
+            .frame(maxWidth: 420)
+
+            Spacer()
+            Spacer()
         }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .themedScreen()
     }
 
     private func verifyAndSave() async {

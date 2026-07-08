@@ -29,16 +29,26 @@ struct PlaylistDetailView: View {
     var body: some View {
         List {
             Section {
-                VStack(spacing: 12) {
-                    RemoteArtworkView(artworkId: playlistId, cornerRadius: 12)
-                        .frame(width: 160, height: 160)
-                    VStack(spacing: 4) {
+                VStack(spacing: 14) {
+                    RemoteArtworkView(artworkId: playlistId, cornerRadius: 16)
+                        .frame(width: 180, height: 180)
+                        .shadow(color: .black.opacity(0.5), radius: 20, y: 10)
+                    VStack(spacing: 5) {
                         Text(playlist?.name ?? "")
                             .font(.title3.bold())
+                            .foregroundStyle(Color.appTextPrimary)
                         if let description = playlist?.description, !description.isEmpty {
                             Text(description)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.appTextSecondary)
+                        }
+                        if playlist?.isPublic == true {
+                            HStack(spacing: 4) {
+                                Image(systemName: "globe")
+                                Text("Public")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(Color.appTextTertiary)
                         }
                     }
                     Button {
@@ -46,11 +56,14 @@ struct PlaylistDetailView: View {
                     } label: {
                         Label("Play All", systemImage: "play.fill")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(AccentButtonStyle())
                     .disabled(queue.isEmpty)
+                    .opacity(queue.isEmpty ? 0.5 : 1)
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
                 .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
 
             Section {
@@ -63,15 +76,19 @@ struct PlaylistDetailView: View {
                         RawTrackRowView(entry: entry)
                     }
                     .buttonStyle(.plain)
+                    .themedRow()
                 }
                 .onDelete(perform: isOwner ? removeTracks : nil)
                 .onMove(perform: isOwner ? moveTracks : nil)
             }
 
             if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                ErrorBanner(message: errorMessage)
+                    .themedRow()
             }
         }
+        .listStyle(.plain)
+        .themedList()
         .navigationTitle(playlist?.name ?? "")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -103,6 +120,7 @@ struct PlaylistDetailView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(Color.appAccent)
                 }
             }
             #if os(iOS)
@@ -115,7 +133,7 @@ struct PlaylistDetailView: View {
         }
         .overlay {
             if isLoading && playlist == nil {
-                ProgressView()
+                ProgressView().tint(Color.appAccent)
             }
         }
         .task { await load() }

@@ -11,6 +11,8 @@ struct MuscatApp: App {
                 .environment(appEnvironment)
                 .environment(appEnvironment.authStore)
                 .environment(appEnvironment.playerStore)
+                .preferredColorScheme(.dark)
+                .tint(.appAccent)
         }
     }
 }

@@ -17,39 +17,57 @@ struct RadioView: View {
     var body: some View {
         List {
             Section {
-                TextField("Start a station from an artist name (leave blank for whole library)", text: $seedArtistName)
-                Button {
-                    Task { await startStation() }
-                } label: {
-                    if isLoading {
-                        ProgressView()
-                    } else {
-                        Text("Start Station")
+                VStack(spacing: 12) {
+                    TextField("Artist name (blank = whole library)", text: $seedArtistName)
+                        .themedField()
+                    Button {
+                        Task { await startStation() }
+                    } label: {
+                        if isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Label("Start Station", systemImage: "dot.radiowaves.left.and.right")
+                                .frame(maxWidth: .infinity)
+                        }
                     }
+                    .buttonStyle(AccentButtonStyle(fullWidth: true))
+                    .disabled(isLoading)
                 }
-                .disabled(isLoading)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
 
             if !stationTracks.isEmpty {
                 Section {
-                    Button {
-                        playerStore.play(tracks: stationTracks.map { QueueTrack($0) }, startAt: 0)
-                    } label: {
-                        Label("Play All", systemImage: "play.fill")
-                    }
-                    Button {
-                        Task { await saveMix() }
-                    } label: {
-                        if isSaving {
-                            ProgressView()
-                        } else {
-                            Label("Save as Playlist", systemImage: "square.and.arrow.down")
+                    HStack(spacing: 12) {
+                        Button {
+                            playerStore.play(tracks: stationTracks.map { QueueTrack($0) }, startAt: 0)
+                        } label: {
+                            Label("Play All", systemImage: "play.fill")
+                                .frame(maxWidth: .infinity)
                         }
+                        .buttonStyle(SurfaceButtonStyle())
+
+                        Button {
+                            Task { await saveMix() }
+                        } label: {
+                            if isSaving {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                Label("Save Mix", systemImage: "square.and.arrow.down")
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .buttonStyle(SurfaceButtonStyle())
+                        .disabled(isSaving)
                     }
-                    .disabled(isSaving)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
 
-                Section("Recommended Tracks") {
+                Section {
                     ForEach(Array(stationTracks.enumerated()), id: \.element.id) { index, track in
                         Button {
                             playerStore.play(tracks: stationTracks.map { QueueTrack($0) }, startAt: index)
@@ -57,17 +75,38 @@ struct RadioView: View {
                             TrackRowView(track: track)
                         }
                         .buttonStyle(.plain)
+                        .themedRow()
                     }
+                } header: {
+                    Text("RECOMMENDED TRACKS")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.appTextTertiary)
+                        .kerning(0.8)
                 }
             }
 
             if let savedMixMessage {
-                Text(savedMixMessage).foregroundStyle(.green)
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption)
+                    Text(savedMixMessage)
+                        .font(.footnote)
+                }
+                .foregroundStyle(Color.appAccent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(Color.appAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
             if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                ErrorBanner(message: errorMessage)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.plain)
+        .themedList()
         .navigationTitle("Radio")
     }
 

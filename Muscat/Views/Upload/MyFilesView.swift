@@ -16,19 +16,32 @@ struct MyFilesView: View {
     var body: some View {
         List {
             if isUploading {
-                HStack {
-                    ProgressView()
+                HStack(spacing: 10) {
+                    ProgressView().tint(Color.appAccent)
                     Text("Uploading...")
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.appTextSecondary)
                 }
+                .themedRow()
             }
             ForEach(files) { file in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(file.trackTitle)
-                    Text(file.filename)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    Image(systemName: "doc.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Color.appTextTertiary)
+                        .frame(width: 36, height: 36)
+                        .background(Color.appSurfaceRaised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(file.trackTitle)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.appTextPrimary)
+                        Text(file.filename)
+                            .font(.caption)
+                            .foregroundStyle(Color.appTextSecondary)
+                    }
                 }
+                .padding(.vertical, 2)
+                .themedRow()
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         Task { await delete(file) }
@@ -41,13 +54,17 @@ struct MyFilesView: View {
                     } label: {
                         Label("Rename", systemImage: "pencil")
                     }
-                    .tint(.blue)
+                    .tint(.appAccent)
                 }
             }
             if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                ErrorBanner(message: errorMessage)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             }
         }
+        .listStyle(.plain)
+        .themedList()
         .navigationTitle("My Files")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -55,16 +72,16 @@ struct MyFilesView: View {
                     showFileImporter = true
                 } label: {
                     Image(systemName: "plus")
+                        .foregroundStyle(Color.appAccent)
                 }
                 .disabled(isUploading)
             }
         }
         .overlay {
             if isLoading && files.isEmpty {
-                ProgressView()
+                ProgressView().tint(Color.appAccent)
             } else if files.isEmpty && !isLoading {
-                Text("No uploaded files yet.")
-                    .foregroundStyle(.secondary)
+                EmptyStateView(systemImage: "tray.and.arrow.up", message: "No uploaded files yet.")
             }
         }
         .refreshable { await load() }

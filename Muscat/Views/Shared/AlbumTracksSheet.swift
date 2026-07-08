@@ -17,7 +17,7 @@ struct AlbumTracksSheet: View {
             List {
                 if let album {
                     ForEach(album.versions) { version in
-                        Section(sectionTitle(for: version)) {
+                        Section {
                             ForEach(Array(version.tracks.enumerated()), id: \.element.id) { index, track in
                                 Button {
                                     playerStore.play(
@@ -26,26 +26,39 @@ struct AlbumTracksSheet: View {
                                     )
                                 } label: {
                                     HStack {
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: 3) {
                                             Text(track.title)
-                                                .foregroundStyle(.primary)
+                                                .font(.subheadline.weight(.medium))
+                                                .foregroundStyle(Color.appTextPrimary)
                                             Text(track.displayArtist)
                                                 .font(.caption)
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(Color.appTextSecondary)
                                         }
                                         Spacer()
                                         if let duration = track.duration {
                                             Text(TrackRowView.formatted(duration))
                                                 .font(.caption)
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(Color.appTextTertiary)
+                                                .monospacedDigit()
                                         }
                                     }
+                                    .contentShape(Rectangle())
                                 }
+                                .buttonStyle(.plain)
+                                .themedRow()
                             }
+                        } header: {
+                            Text(sectionTitle(for: version))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.appTextTertiary)
+                                .kerning(0.8)
+                                .textCase(.uppercase)
                         }
                     }
                 }
             }
+            .listStyle(.plain)
+            .themedList()
             .navigationTitle(album?.title ?? "Album")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -53,13 +66,14 @@ struct AlbumTracksSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
             }
             .overlay {
                 if isLoading {
-                    ProgressView()
+                    ProgressView().tint(Color.appAccent)
                 } else if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.secondary)
+                    EmptyStateView(systemImage: "exclamationmark.circle", message: errorMessage)
                 }
             }
             .task { await load() }

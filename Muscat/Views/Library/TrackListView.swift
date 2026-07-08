@@ -18,6 +18,7 @@ struct TrackListView: View {
                     NavigationLink(value: track.id) {
                         TrackRowView(track: track)
                     }
+                    .themedRow()
                     .contextMenu {
                         Button {
                             playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
@@ -32,11 +33,13 @@ struct TrackListView: View {
                         } label: {
                             Label("Play", systemImage: "play.fill")
                         }
-                        .tint(.accentColor)
+                        .tint(.appAccent)
                     }
                     #endif
                 }
             }
+            .listStyle(.plain)
+            .themedList()
             .navigationTitle("Library")
             .navigationDestination(for: String.self) { trackId in
                 if let index = tracks.firstIndex(where: { $0.id == trackId }) {
@@ -64,16 +67,17 @@ struct TrackListView: View {
                         }
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
+                            .foregroundStyle(Color.appAccent)
                     }
                 }
             }
             .overlay {
                 if isLoading && tracks.isEmpty {
-                    ProgressView()
+                    ProgressView().tint(Color.appAccent)
                 } else if let errorMessage, tracks.isEmpty {
-                    ContentUnavailableFallback(message: errorMessage)
+                    EmptyStateView(systemImage: "exclamationmark.circle", message: errorMessage)
                 } else if tracks.isEmpty {
-                    ContentUnavailableFallback(message: "No tracks yet.")
+                    EmptyStateView(systemImage: "music.note.list", message: "No tracks yet.")
                 }
             }
             .refreshable { await load() }
@@ -89,21 +93,6 @@ struct TrackListView: View {
             tracks = try await appEnvironment.apiClient.fetchTracks(sort: sort, filter: filter)
         } catch {
             errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
-        }
-    }
-}
-
-/// Small stand-in for `ContentUnavailableView` that also works on macOS 14 without
-/// needing the exact SF Symbol configuration APIs to be double-checked offline.
-private struct ContentUnavailableFallback: View {
-    let message: String
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.circle")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text(message)
-                .foregroundStyle(.secondary)
         }
     }
 }

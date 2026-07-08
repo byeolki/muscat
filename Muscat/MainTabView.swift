@@ -25,10 +25,13 @@ struct MainTabView: View {
         .safeAreaInset(edge: .bottom) {
             if playerStore.currentTrack != nil {
                 MiniPlayerBar(onTap: { showNowPlaying = true })
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 6)
             }
         }
         .sheet(isPresented: $showNowPlaying) {
             NowPlayingView()
         }
+        .themedScreen()
     }
 }

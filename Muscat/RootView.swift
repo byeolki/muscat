@@ -18,6 +18,7 @@ struct RootView: View {
                 LoginView()
             }
         }
+        .themedScreen()
         .task {
             isServerConfigured = appEnvironment.serverConfig.isConfigured
             if isServerConfigured {

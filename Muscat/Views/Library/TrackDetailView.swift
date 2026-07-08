@@ -22,25 +22,27 @@ struct TrackDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                RemoteArtworkView(artworkId: detail?.albumVersionId, cornerRadius: 12)
-                    .frame(width: 220, height: 220)
-                    .padding(.top)
+            VStack(spacing: 20) {
+                RemoteArtworkView(artworkId: detail?.albumVersionId, cornerRadius: 16)
+                    .frame(width: 240, height: 240)
+                    .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
+                    .padding(.top, 20)
 
-                VStack(spacing: 4) {
+                VStack(spacing: 5) {
                     Text(detail?.title ?? queue[safe: index]?.title ?? "")
                         .font(.title2.bold())
+                        .foregroundStyle(Color.appTextPrimary)
                         .multilineTextAlignment(.center)
                     Text(detail?.displayArtist ?? queue[safe: index]?.displayArtist ?? "")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.appTextSecondary)
                     if let originalArtist = detail?.override?.originalArtist, detail?.isCover == true {
                         Text("cover of \(originalArtist)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            .foregroundStyle(Color.appTextTertiary)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
 
                 HStack(spacing: 12) {
                     Button {
@@ -49,61 +51,65 @@ struct TrackDetailView: View {
                         Label("Play", systemImage: "play.fill")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(AccentButtonStyle(fullWidth: true))
 
-                    Button {
+                    iconWell(
+                        systemImage: isFavorited ? "heart.fill" : "heart",
+                        tint: isFavorited ? Color.appAccent : Color.appTextSecondary
+                    ) {
                         Task { await toggleFavorite() }
-                    } label: {
-                        Image(systemName: isFavorited ? "heart.fill" : "heart")
                     }
-                    .buttonStyle(.bordered)
-                    .tint(isFavorited ? .red : .secondary)
 
                     if detail?.hasVideo == true {
-                        Button {
+                        iconWell(systemImage: "video.fill", tint: Color.appTextSecondary) {
                             showVideo = true
-                        } label: {
-                            Image(systemName: "video.fill")
                         }
-                        .buttonStyle(.bordered)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
 
                 if let tags = detail?.tags, !tags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
+                        HStack(spacing: 8) {
                             ForEach(tags) { tag in
                                 Text(tag.name)
                                     .font(.caption)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(.quaternary, in: Capsule())
+                                    .foregroundStyle(Color.appTextSecondary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.appSurface, in: Capsule())
+                                    .overlay(Capsule().stroke(Color.appBorder, lineWidth: 1))
                             }
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal, 24)
                     }
                 }
 
                 if let lyrics {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Lyrics")
-                            .font(.headline)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("LYRICS")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.appTextTertiary)
+                            .kerning(0.8)
                         Text(lyrics.content)
-                            .font(.body)
+                            .font(.callout)
+                            .foregroundStyle(Color.appTextSecondary)
+                            .lineSpacing(5)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
+                    .padding(16)
+                    .background(Color.appSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .padding(.horizontal, 24)
                 }
 
                 if let errorMessage {
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
+                    ErrorBanner(message: errorMessage)
+                        .padding(.horizontal, 24)
                 }
             }
-            .padding(.bottom, 32)
+            .padding(.bottom, 40)
         }
+        .themedScreen()
         .navigationTitle(detail?.title ?? "")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -115,6 +121,21 @@ struct TrackDetailView: View {
         .sheet(isPresented: $showVideo) {
             VideoPlayerView(trackId: trackId, title: detail?.title ?? "")
         }
+    }
+
+    private func iconWell(systemImage: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(tint)
+                .frame(width: 48, height: 48)
+                .background(Color.appSurfaceRaised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.appBorder, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     private func load() async {

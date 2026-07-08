@@ -13,34 +13,63 @@ struct CreatePlaylistView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
 
+    private var canSubmit: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && !isSaving
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Info") {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
                     TextField("Name", text: $name)
+                        .themedField()
                     TextField("Description (optional)", text: $description)
-                    Toggle("Public Playlist", isOn: $isPublic)
-                }
-                if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
-                }
-            }
-            .navigationTitle("New Playlist")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
+                        .themedField()
+
+                    Toggle(isOn: $isPublic) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Public Playlist")
+                                .foregroundStyle(Color.appTextPrimary)
+                            Text("Anyone on this server can see and play it.")
+                                .font(.caption)
+                                .foregroundStyle(Color.appTextTertiary)
+                        }
+                    }
+                    .tint(Color.appAccent)
+                    .padding(14)
+                    .background(Color.appSurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    if let errorMessage {
+                        ErrorBanner(message: errorMessage)
+                    }
+
                     Button {
                         Task { await create() }
                     } label: {
                         if isSaving {
                             ProgressView()
+                                .frame(maxWidth: .infinity)
                         } else {
-                            Text("Create")
+                            Text("Create Playlist")
                         }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
+                    .buttonStyle(AccentButtonStyle(fullWidth: true))
+                    .disabled(!canSubmit)
+                    .opacity(canSubmit ? 1 : 0.5)
+                }
+                .padding(24)
+                .frame(maxWidth: 480)
+                .frame(maxWidth: .infinity)
+            }
+            .themedScreen()
+            .navigationTitle("New Playlist")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
             }
         }

@@ -20,22 +20,34 @@ struct AddTracksToPlaylistView: View {
                 Button {
                     toggle(track.id)
                 } label: {
-                    HStack {
+                    HStack(spacing: 12) {
                         Image(systemName: selectedIds.contains(track.id) ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(selectedIds.contains(track.id) ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(track.title).foregroundStyle(.primary)
+                            .font(.system(size: 20))
+                            .foregroundStyle(selectedIds.contains(track.id) ? Color.appAccent : Color.appTextTertiary)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(track.title)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.appTextPrimary)
                             Text(track.displayArtist)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.appTextSecondary)
                         }
                     }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .themedRow()
             }
+            .listStyle(.plain)
+            .themedList()
             .navigationTitle("Add Tracks")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -45,6 +57,8 @@ struct AddTracksToPlaylistView: View {
                             ProgressView()
                         } else {
                             Text("Add (\(selectedIds.count))")
+                                .fontWeight(.semibold)
+                                .foregroundStyle(selectedIds.isEmpty ? Color.appTextTertiary : Color.appAccent)
                         }
                     }
                     .disabled(selectedIds.isEmpty || isSaving)
@@ -52,9 +66,9 @@ struct AddTracksToPlaylistView: View {
             }
             .overlay {
                 if isLoading {
-                    ProgressView()
+                    ProgressView().tint(Color.appAccent)
                 } else if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.secondary)
+                    EmptyStateView(systemImage: "exclamationmark.circle", message: errorMessage)
                 }
             }
             .task { await load() }

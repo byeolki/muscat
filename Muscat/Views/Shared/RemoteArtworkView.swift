@@ -14,7 +14,9 @@ struct RemoteArtworkView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(.quaternary)
+                .fill(Color.appSurfaceRaised)
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(Color.appBorder, lineWidth: 1)
             if let resolvedURL {
                 AsyncImage(url: resolvedURL) { phase in
                     if let image = phase.image {
@@ -39,6 +41,6 @@ struct RemoteArtworkView: View {
 
     private var placeholderIcon: some View {
         Image(systemName: "music.note")
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.appTextTertiary)
     }
 }

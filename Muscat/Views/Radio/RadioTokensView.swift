@@ -23,24 +23,36 @@ struct RadioTokensView: View {
                     } label: {
                         if isCreating {
                             ProgressView()
+                                .frame(maxWidth: .infinity)
                         } else {
                             Label("Create New Radio URL (valid 90 days)", systemImage: "dot.radiowaves.left.and.right")
+                                .frame(maxWidth: .infinity)
                         }
                     }
+                    .buttonStyle(AccentButtonStyle(fullWidth: true))
                     .disabled(isCreating)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
 
-                Section("Issued URLs") {
+                Section {
                     ForEach(tokens) { token in
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 5) {
                             Text(broadcastURLString(for: token))
-                                .font(.caption)
-                                .foregroundStyle(token.isActive ? .primary : .secondary)
+                                .font(.caption.monospaced())
+                                .foregroundStyle(token.isActive ? Color.appTextPrimary : Color.appTextTertiary)
                                 .lineLimit(2)
-                            Text(token.isActive ? "Expires: \(token.expiresAt.formatted())" : "Expired or revoked")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                            HStack(spacing: 5) {
+                                Circle()
+                                    .fill(token.isActive ? Color.appAccent : Color.appTextTertiary)
+                                    .frame(width: 6, height: 6)
+                                Text(token.isActive ? "Expires \(token.expiresAt.formatted())" : "Expired or revoked")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.appTextTertiary)
+                            }
                         }
+                        .themedRow()
                         .swipeActions {
                             Button(role: .destructive) {
                                 Task { await revoke(token) }
@@ -50,14 +62,26 @@ struct RadioTokensView: View {
                         }
                     }
                     if tokens.isEmpty && !isLoading {
-                        Text("No radio URLs issued yet.").foregroundStyle(.secondary)
+                        Text("No radio URLs issued yet.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.appTextTertiary)
+                            .themedRow()
                     }
+                } header: {
+                    Text("ISSUED URLS")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.appTextTertiary)
+                        .kerning(0.8)
                 }
 
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    ErrorBanner(message: errorMessage)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                 }
             }
+            .listStyle(.plain)
+            .themedList()
             .navigationTitle("Radio URLs")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -65,6 +89,7 @@ struct RadioTokensView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
             }
             .task { await load() }

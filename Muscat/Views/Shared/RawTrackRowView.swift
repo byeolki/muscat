@@ -28,35 +28,35 @@ struct RawTrackRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: albumVersionId)
-                .frame(width: 44, height: 44)
+            RemoteArtworkView(artworkId: albumVersionId, cornerRadius: 8)
+                .frame(width: 48, height: 48)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
                     Text(title)
-                        .font(.body)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.appTextPrimary)
                         .lineLimit(1)
                     if isCover {
-                        Text("COVER")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.secondary)
+                        BadgeLabel(text: "COVER")
                     }
                 }
                 Text((artist?.isEmpty == false ? artist : nil) ?? "Unknown Artist")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(Color.appTextSecondary)
                     .lineLimit(1)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             if let duration {
                 Text(TrackRowView.formatted(duration))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.appTextTertiary)
                     .monospacedDigit()
             }
         }
+        .padding(.vertical, 2)
         .contentShape(Rectangle())
     }
 }

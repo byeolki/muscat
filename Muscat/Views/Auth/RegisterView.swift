@@ -10,63 +10,86 @@ struct RegisterView: View {
     @State private var password = ""
     @State private var inviteToken = ""
 
+    private var canSubmit: Bool {
+        !name.isEmpty && !email.isEmpty && !password.isEmpty && !inviteToken.isEmpty && !authStore.isLoading
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Account Info") {
-                    TextField("Name", text: $name)
-                    TextField("Email", text: $email)
-                        #if os(iOS)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        #endif
-                        .autocorrectionDisabled()
-                    SecureField("Password", text: $password)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        fieldLabel("Account")
+                        TextField("Name", text: $name)
+                            .themedField()
+                        TextField("Email", text: $email)
+                            #if os(iOS)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            #endif
+                            .autocorrectionDisabled()
+                            .themedField()
+                        SecureField("Password", text: $password)
+                            .themedField()
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        fieldLabel("Invite code")
+                        TextField("Code from your admin", text: $inviteToken)
+                            .autocorrectionDisabled()
+                            .themedField()
+                        Text("Registration is invite-only. Ask your server admin for a code.")
+                            .font(.caption)
+                            .foregroundStyle(Color.appTextTertiary)
+                    }
+
+                    if let error = authStore.lastErrorMessage {
+                        ErrorBanner(message: error)
+                    }
+
+                    Button {
+                        Task {
+                            await authStore.register(
+                                name: name, email: email, password: password, inviteToken: inviteToken
+                            )
+                            if authStore.isAuthenticated {
+                                dismiss()
+                            }
+                        }
+                    } label: {
+                        if authStore.isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text("Create Account")
+                        }
+                    }
+                    .buttonStyle(AccentButtonStyle(fullWidth: true))
+                    .disabled(!canSubmit)
+                    .opacity(canSubmit ? 1 : 0.5)
                 }
-                Section("Invite Code") {
-                    TextField("Invite code from your admin", text: $inviteToken)
-                        .autocorrectionDisabled()
-                }
-                if let error = authStore.lastErrorMessage {
-                    Text(error).foregroundStyle(.red)
-                }
+                .padding(24)
+                .frame(maxWidth: 480)
+                .frame(maxWidth: .infinity)
             }
+            .themedScreen()
             .navigationTitle("Sign Up")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                #if os(iOS)
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    registerButton
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    registerButton
-                }
-                #endif
             }
         }
     }
 
-    private var registerButton: some View {
-        Button {
-            Task {
-                await authStore.register(name: name, email: email, password: password, inviteToken: inviteToken)
-                if authStore.isAuthenticated {
-                    dismiss()
-                }
-            }
-        } label: {
-            if authStore.isLoading {
-                ProgressView()
-            } else {
-                Text("Sign Up")
-            }
-        }
-        .disabled(name.isEmpty || email.isEmpty || password.isEmpty || inviteToken.isEmpty || authStore.isLoading)
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.appTextTertiary)
+            .kerning(0.8)
     }
 }

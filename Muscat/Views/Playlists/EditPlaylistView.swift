@@ -31,55 +31,101 @@ struct EditPlaylistView: View {
         _isPublic = State(initialValue: playlist.isPublic)
     }
 
+    private var canSubmit: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && !isSaving
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Info") {
-                    TextField("Name", text: $name)
-                    TextField("Description", text: $description)
-                    Toggle("Public Playlist", isOn: $isPublic)
-                }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        fieldLabel("Info")
+                        TextField("Name", text: $name)
+                            .themedField()
+                        TextField("Description", text: $description)
+                            .themedField()
+                        Toggle("Public Playlist", isOn: $isPublic)
+                            .tint(Color.appAccent)
+                            .foregroundStyle(Color.appTextPrimary)
+                            .padding(14)
+                            .background(Color.appSurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
 
-                Section("Cover Image") {
-                    #if os(iOS)
-                    PhotosPicker("Choose from Photo Library", selection: $selectedPhoto, matching: .images)
+                    VStack(alignment: .leading, spacing: 12) {
+                        fieldLabel("Cover image")
+                        #if os(iOS)
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                            Label("Choose from Photo Library", systemImage: "photo")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SurfaceButtonStyle())
                         .onChange(of: selectedPhoto) { _, newValue in
                             Task { await uploadPickedPhoto(newValue) }
                         }
-                    #else
-                    Button("Choose Image File") { showFileImporter = true }
+                        #else
+                        Button {
+                            showFileImporter = true
+                        } label: {
+                            Label("Choose Image File", systemImage: "photo")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SurfaceButtonStyle())
                         .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.jpeg, .png, .webP]) { result in
                             Task { await uploadImportedFile(result) }
                         }
-                    #endif
-                    Button("Remove Cover Image", role: .destructive) {
-                        Task { await deleteCover() }
+                        #endif
+                        Button {
+                            Task { await deleteCover() }
+                        } label: {
+                            Text("Remove Cover Image")
+                                .foregroundStyle(Color.appDanger)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(SurfaceButtonStyle())
                     }
-                }
 
-                if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
-                }
-            }
-            .navigationTitle("Edit Playlist")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
+                    if let errorMessage {
+                        ErrorBanner(message: errorMessage)
+                    }
+
                     Button {
                         Task { await save() }
                     } label: {
                         if isSaving {
                             ProgressView()
+                                .frame(maxWidth: .infinity)
                         } else {
-                            Text("Save")
+                            Text("Save Changes")
                         }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
+                    .buttonStyle(AccentButtonStyle(fullWidth: true))
+                    .disabled(!canSubmit)
+                    .opacity(canSubmit ? 1 : 0.5)
+                }
+                .padding(24)
+                .frame(maxWidth: 480)
+                .frame(maxWidth: .infinity)
+            }
+            .themedScreen()
+            .navigationTitle("Edit Playlist")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
             }
         }
+    }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.appTextTertiary)
+            .kerning(0.8)
     }
 
     private func save() async {

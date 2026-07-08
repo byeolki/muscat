@@ -6,50 +6,67 @@ struct TrackRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: track.albumVersionId)
-                .frame(width: 44, height: 44)
+            RemoteArtworkView(artworkId: track.albumVersionId, cornerRadius: 8)
+                .frame(width: 48, height: 48)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
                     Text(track.title)
-                        .font(.body)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.appTextPrimary)
                         .lineLimit(1)
                     if track.isCover {
-                        Text("COVER")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.secondary)
+                        BadgeLabel(text: "COVER")
                     }
                 }
                 Text(track.displayArtist.isEmpty ? "Unknown Artist" : track.displayArtist)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.caption)
+                    .foregroundStyle(Color.appTextSecondary)
                     .lineLimit(1)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            if track.hasVideo {
-                Image(systemName: "video.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            if track.isFavorited {
-                Image(systemName: "heart.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-            if let duration = track.duration {
-                Text(Self.formatted(duration))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+            HStack(spacing: 8) {
+                if track.hasVideo {
+                    Image(systemName: "video.fill")
+                        .font(.caption2)
+                        .foregroundStyle(Color.appTextTertiary)
+                }
+                if track.isFavorited {
+                    Image(systemName: "heart.fill")
+                        .font(.caption2)
+                        .foregroundStyle(Color.appAccent)
+                }
+                if let duration = track.duration {
+                    Text(Self.formatted(duration))
+                        .font(.caption)
+                        .foregroundStyle(Color.appTextTertiary)
+                        .monospacedDigit()
+                }
             }
         }
+        .padding(.vertical, 2)
         .contentShape(Rectangle())
     }
 
     static func formatted(_ seconds: Double) -> String {
         let total = Int(seconds.rounded())
         return String(format: "%d:%02d", total / 60, total % 60)
+    }
+}
+
+/// Small uppercase chip used for track markers (COVER, etc).
+struct BadgeLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 9, weight: .bold))
+            .kerning(0.5)
+            .foregroundStyle(Color.appAccent)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(Color.appAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }

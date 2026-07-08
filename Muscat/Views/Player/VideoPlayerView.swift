@@ -22,11 +22,13 @@ struct VideoPlayerView: View {
                 if let player {
                     VideoPlayer(player: player)
                 } else if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.secondary)
+                    EmptyStateView(systemImage: "video.slash", message: errorMessage)
                 } else {
-                    ProgressView()
+                    ProgressView().tint(Color.appAccent)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .themedScreen()
             .navigationTitle(title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -34,6 +36,7 @@ struct VideoPlayerView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
+                        .foregroundStyle(Color.appTextSecondary)
                 }
             }
         }
