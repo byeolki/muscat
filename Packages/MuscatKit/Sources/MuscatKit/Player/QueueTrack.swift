@@ -27,7 +27,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             albumVersionId: track.albumVersionId,
-            duration: track.duration
+            duration: track.durationSeconds
         )
     }
 
@@ -37,7 +37,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             albumVersionId: track.albumVersionId,
-            duration: track.duration
+            duration: track.durationSeconds
         )
     }
 
@@ -47,7 +47,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.artist ?? "",
             albumVersionId: track.albumVersionId,
-            duration: track.canonicalDuration
+            duration: track.durationSeconds
         )
     }
 
@@ -57,7 +57,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             albumVersionId: track.albumVersionId,
-            duration: track.canonicalDuration
+            duration: track.durationSeconds
         )
     }
 }

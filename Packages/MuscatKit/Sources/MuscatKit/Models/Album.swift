@@ -40,6 +40,12 @@ public struct AlbumTrackEntry: Codable, Hashable, Identifiable {
     public var displayArtist: String {
         artists.map(\.name).joined(separator: ", ")
     }
+
+    /// `duration`/`canonical_duration` are stored server-side in milliseconds; convert
+    /// to seconds for playback/display.
+    public var durationSeconds: Double? {
+        duration.map { $0 / 1000 }
+    }
 }
 
 public struct AlbumVersion: Codable, Hashable, Identifiable {
@@ -68,7 +74,7 @@ public extension QueueTrack {
             title: track.title,
             displayArtist: track.displayArtist,
             albumVersionId: track.albumVersionId,
-            duration: track.duration
+            duration: track.durationSeconds
         )
     }
 }

@@ -55,6 +55,12 @@ public struct Source: Codable, Hashable, Identifiable {
     public let updatedAt: Date
     public let createdAt: Date
     public let deletedAt: Date?
+
+    /// `duration` is stored server-side in milliseconds (`ffprobe.service.ts` rounds
+    /// `parseFloat(duration) * 1000`); convert to seconds for playback/display.
+    public var durationSeconds: Double? {
+        duration.map { $0 / 1000 }
+    }
 }
 
 /// `GET /tracks` list item shape. Note the top-level `artist` is the RAW column
@@ -83,6 +89,13 @@ public struct Track: Codable, Hashable, Identifiable {
     /// Comma-joined, override-resolved artist names — safe for display.
     public var displayArtist: String {
         artists.map(\.name).joined(separator: ", ")
+    }
+
+    /// `duration`/`canonical_duration` are stored server-side in milliseconds
+    /// (`ffprobe.service.ts` rounds `parseFloat(duration) * 1000`); convert to seconds
+    /// for playback/display.
+    public var durationSeconds: Double? {
+        duration.map { $0 / 1000 }
     }
 }
 
@@ -123,6 +136,12 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
             .filter { $0.mediaKind == .audio && $0.available }
             .sorted { $0.priority > $1.priority }
             .first
+    }
+
+    /// `duration`/`canonical_duration` are stored server-side in milliseconds; convert
+    /// to seconds for playback/display.
+    public var durationSeconds: Double? {
+        duration.map { $0 / 1000 }
     }
 }
 

@@ -15,7 +15,7 @@ struct RawTrackRowView: View {
         artist = track.artist
         albumVersionId = track.albumVersionId
         isCover = track.isCover
-        duration = track.canonicalDuration
+        duration = track.durationSeconds
     }
 
     init(entry: PlaylistTrackEntry) {
@@ -23,7 +23,7 @@ struct RawTrackRowView: View {
         artist = entry.artist
         albumVersionId = entry.albumVersionId
         isCover = entry.isCover
-        duration = entry.canonicalDuration
+        duration = entry.durationSeconds
     }
 
     var body: some View {

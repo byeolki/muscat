@@ -35,7 +35,7 @@ struct AlbumTracksSheet: View {
                                                 .foregroundStyle(Color.appTextSecondary)
                                         }
                                         Spacer()
-                                        if let duration = track.duration {
+                                        if let duration = track.durationSeconds {
                                             Text(TrackRowView.formatted(duration))
                                                 .font(.caption)
                                                 .foregroundStyle(Color.appTextTertiary)

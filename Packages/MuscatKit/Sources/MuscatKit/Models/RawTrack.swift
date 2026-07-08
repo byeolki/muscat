@@ -18,6 +18,12 @@ public struct RawTrack: Codable, Hashable, Identifiable {
     public let addedAt: Date
     public let updatedAt: Date
     public let deletedAt: Date?
+
+    /// `canonical_duration` is stored server-side in milliseconds; convert to seconds
+    /// for playback/display.
+    public var durationSeconds: Double? {
+        canonicalDuration.map { $0 / 1000 }
+    }
 }
 
 /// A `RawTrack` plus its position within a playlist (`GET /playlists/:id`).
@@ -41,5 +47,11 @@ public struct PlaylistTrackEntry: Codable, Hashable, Identifiable {
     /// unresolved `artist` column (comma-separated free text).
     public var displayArtist: String {
         artist ?? ""
+    }
+
+    /// `canonical_duration` is stored server-side in milliseconds; convert to seconds
+    /// for playback/display.
+    public var durationSeconds: Double? {
+        canonicalDuration.map { $0 / 1000 }
     }
 }

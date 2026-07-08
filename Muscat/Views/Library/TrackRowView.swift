@@ -38,7 +38,7 @@ struct TrackRowView: View {
                         .font(.caption2)
                         .foregroundStyle(Color.appAccent)
                 }
-                if let duration = track.duration {
+                if let duration = track.durationSeconds {
                     Text(Self.formatted(duration))
                         .font(.caption)
                         .foregroundStyle(Color.appTextTertiary)
