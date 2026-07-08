@@ -135,8 +135,13 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
         artists.map(\.name).joined(separator: ", ")
     }
 
+    /// Mirrors the server's own `has_video` computation (`tracks.service.ts`):
+    /// a video `Source` row OR a `video_locator` override, either one is enough. The
+    /// streaming endpoint resolves both the same way, so this must check both too, or
+    /// tracks whose video only exists via `video_locator` would silently hide the
+    /// "watch video" entry point even though playback would actually work.
     public var hasVideo: Bool {
-        sources.contains { $0.mediaKind == .video }
+        sources.contains { $0.mediaKind == .video } || override?.videoLocator != nil
     }
 
     /// Best available audio source: prefers higher `priority`, then availability.
