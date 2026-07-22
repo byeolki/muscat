@@ -14,8 +14,12 @@ public final class PlayerStore {
     public private(set) var isLoading = false
     public private(set) var errorMessage: String?
     public private(set) var repeatMode: RepeatMode
+    /// Per-track loudness leveling (server-side ReplayGain/loudnorm via ffmpeg) so
+    /// quiet and loud tracks don't require a volume tweak between songs.
+    public private(set) var normalize: Bool
 
     private static let repeatModeDefaultsKey = "muscat.repeatMode"
+    private static let normalizeDefaultsKey = "muscat.normalize"
 
     private var queue = PlaybackQueue()
     private let engine = AudioPlayerEngine()
@@ -33,6 +37,7 @@ public final class PlayerStore {
         } else {
             repeatMode = .off
         }
+        normalize = UserDefaults.standard.bool(forKey: Self.normalizeDefaultsKey)
         configureAudioSession()
         wireEngineCallbacks()
         wireNowPlayingCallbacks()
@@ -49,6 +54,16 @@ public final class PlayerStore {
         let currentIndex = order.firstIndex(of: repeatMode) ?? 0
         repeatMode = order[(currentIndex + 1) % order.count]
         UserDefaults.standard.set(repeatMode.rawValue, forKey: Self.repeatModeDefaultsKey)
+    }
+
+    /// Toggling mid-track reloads the current stream (at the same position and
+    /// play/pause state) so the new setting actually takes effect immediately,
+    /// instead of only applying starting with the next track.
+    public func toggleNormalize() {
+        normalize.toggle()
+        UserDefaults.standard.set(normalize, forKey: Self.normalizeDefaultsKey)
+        guard let track = currentTrack else { return }
+        Task { await loadAndPlay(track: track, resumeAt: currentSeconds, autoplay: isPlaying) }
     }
 
     /// Replaces the queue with `tracks` and starts playing the one at `index`.
@@ -111,23 +126,30 @@ public final class PlayerStore {
         nowPlaying.updateElapsed(seconds)
     }
 
-    private func loadAndPlay(track: QueueTrack) async {
+    private func loadAndPlay(track: QueueTrack, resumeAt: Double = 0, autoplay: Bool = true) async {
         isLoading = true
         errorMessage = nil
         currentTrack = track
-        currentSeconds = 0
+        currentSeconds = resumeAt
         duration = track.duration
         defer { isLoading = false }
 
-        guard let url = await apiClient.streamURL(trackId: track.id, format: .aac) else {
+        guard let url = await apiClient.streamURL(trackId: track.id, format: .aac, normalize: normalize) else {
             errorMessage = "Couldn't build a streaming URL."
             return
         }
-        engine.load(url: url, autoplay: true)
-        isPlaying = true
+        engine.load(url: url, autoplay: autoplay)
+        if resumeAt > 0 {
+            await engine.seek(toSeconds: resumeAt)
+        }
+        isPlaying = autoplay
         pushNowPlayingInfo(fetchArtwork: true)
         startLiveActivity(for: track)
-        try? await apiClient.recordPlayStart(trackId: track.id)
+        // Only a genuine track start counts as a play, not a normalize-toggle reload
+        // of the track already playing.
+        if resumeAt == 0 {
+            try? await apiClient.recordPlayStart(trackId: track.id)
+        }
     }
 
     private func startLiveActivity(for track: QueueTrack) {

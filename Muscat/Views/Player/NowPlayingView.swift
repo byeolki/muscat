@@ -187,8 +187,16 @@ struct NowPlayingView: View {
 
             Spacer()
 
-            // Balances the repeat button so play stays visually centered.
-            Color.clear.frame(width: 52, height: 52)
+            Button {
+                playerStore.toggleNormalize()
+            } label: {
+                Image(systemName: "waveform")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(playerStore.normalize ? Color.appAccent : Color.appTextTertiary)
+                    .frame(width: 52, height: 52)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Normalize volume")
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 24)
