@@ -23,24 +23,26 @@ struct RemoteArtworkView: View {
     @State private var fallbackURL: URL?
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(Color.appSurfaceRaised)
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(Color.appBorder, lineWidth: 1)
+        GeometryReader { geometry in
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(Color.appSurfaceRaised)
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(Color.appBorder, lineWidth: 1)
 
-            if let primaryURL {
-                AsyncImage(url: primaryURL) { phase in
-                    if let image = phase.image {
-                        styledImage(image)
-                    } else if phase.error != nil {
-                        fallbackOrPlaceholder
-                    } else {
-                        Color.clear
+                if let primaryURL {
+                    AsyncImage(url: primaryURL) { phase in
+                        if let image = phase.image {
+                            styledImage(image, in: geometry.size)
+                        } else if phase.error != nil {
+                            fallbackOrPlaceholder(in: geometry.size)
+                        } else {
+                            Color.clear
+                        }
                     }
+                } else {
+                    fallbackOrPlaceholder(in: geometry.size)
                 }
-            } else {
-                fallbackOrPlaceholder
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
@@ -79,11 +81,11 @@ struct RemoteArtworkView: View {
     }
 
     @ViewBuilder
-    private var fallbackOrPlaceholder: some View {
+    private func fallbackOrPlaceholder(in size: CGSize) -> some View {
         if let fallbackURL {
             AsyncImage(url: fallbackURL) { phase in
                 if let image = phase.image {
-                    styledImage(image)
+                    styledImage(image, in: size)
                 } else {
                     placeholderIcon
                 }
@@ -93,14 +95,16 @@ struct RemoteArtworkView: View {
         }
     }
 
-    /// `aspectRatio(.fill)` alone lets a non-square source grow past its container in
-    /// one dimension; pin it back to the proposed size before clipping, or it spills
-    /// outside the rounded frame.
-    private func styledImage(_ image: Image) -> some View {
+    /// `aspectRatio(.fill)` alone only scales a non-square source to cover its
+    /// container, it doesn't confine the result to it — a `maxWidth/maxHeight:
+    /// .infinity` frame isn't reliably enough to pin that back down inside an
+    /// `AsyncImage` content closure, so this takes the exact measured size from the
+    /// enclosing `GeometryReader` and fixes the frame to it before clipping.
+    private func styledImage(_ image: Image, in size: CGSize) -> some View {
         image
             .resizable()
             .aspectRatio(contentMode: .fill)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: size.width, height: size.height)
             .clipped()
     }
 
