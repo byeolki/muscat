@@ -30,7 +30,9 @@ struct MyFilesView: View {
                         .font(.system(size: 15))
                         .foregroundStyle(Color.appTextTertiary)
                         .frame(width: 36, height: 36)
-                        .background(Color.appSurfaceRaised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .background(
+                            Color.appSurfaceRaised,
+                            in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     VStack(alignment: .leading, spacing: 3) {
                         Text(file.trackTitle)
                             .font(.subheadline.weight(.medium))
@@ -93,11 +95,16 @@ struct MyFilesView: View {
         ) { result in
             Task { await handleImport(result) }
         }
-        .alert("Rename File", isPresented: Binding(
-            get: { renamingFile != nil },
-            set: { if !$0 { renamingFile = nil } }
-        )) {
-            TextField("File name", text: $renameText)
+        .alert(
+            "Rename File",
+            isPresented: Binding(
+                get: { renamingFile != nil },
+                set: { if !$0 { renamingFile = nil } }
+            )
+        ) {
+            TextField(
+                "", text: $renameText,
+                prompt: Text("File name").foregroundStyle(Color.appTextTertiary))
             Button("Cancel", role: .cancel) { renamingFile = nil }
             Button("Save") {
                 if let file = renamingFile {
@@ -114,7 +121,8 @@ struct MyFilesView: View {
         do {
             files = try await appEnvironment.apiClient.fetchMyUploadedFiles()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            errorMessage =
+                (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }
     }
 
@@ -129,10 +137,12 @@ struct MyFilesView: View {
             guard let data = try? Data(contentsOf: url) else { continue }
             do {
                 _ = try await appEnvironment.apiClient.uploadFile(
-                    data: data, filename: url.lastPathComponent, mimeType: "application/octet-stream"
+                    data: data, filename: url.lastPathComponent,
+                    mimeType: "application/octet-stream"
                 )
             } catch {
-                errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+                errorMessage =
+                    (error as? APIClientError)?.errorDescription ?? error.localizedDescription
             }
         }
         await load()
@@ -141,10 +151,12 @@ struct MyFilesView: View {
     private func rename(_ file: UploadedFileEntry, to newName: String) async {
         renamingFile = nil
         do {
-            try await appEnvironment.apiClient.renameUploadedFile(sourceId: file.sourceId, filename: newName)
+            try await appEnvironment.apiClient.renameUploadedFile(
+                sourceId: file.sourceId, filename: newName)
             await load()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            errorMessage =
+                (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }
     }
 
@@ -153,7 +165,8 @@ struct MyFilesView: View {
             try await appEnvironment.apiClient.deleteUploadedFile(sourceId: file.sourceId)
             files.removeAll { $0.id == file.id }
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            errorMessage =
+                (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }
     }
 }

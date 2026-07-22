@@ -41,9 +41,9 @@ struct EditPlaylistView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 12) {
                         fieldLabel("Info")
-                        TextField("Name", text: $name)
+                        TextField("", text: $name, prompt: Text("Name").foregroundStyle(Color.appTextTertiary))
                             .themedField()
-                        TextField("Description", text: $description)
+                        TextField("", text: $description, prompt: Text("Description").foregroundStyle(Color.appTextTertiary))
                             .themedField()
                         Toggle("Public Playlist", isOn: $isPublic)
                             .tint(Color.appAccent)

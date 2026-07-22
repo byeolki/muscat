@@ -27,7 +27,7 @@ struct LoginView: View {
             .padding(.bottom, 40)
 
             VStack(spacing: 14) {
-                TextField("Email", text: $email)
+                TextField("", text: $email, prompt: Text("Email").foregroundStyle(Color.appTextTertiary))
                     #if os(iOS)
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
@@ -35,7 +35,7 @@ struct LoginView: View {
                     .autocorrectionDisabled()
                     .themedField()
 
-                SecureField("Password", text: $password)
+                SecureField("", text: $password, prompt: Text("Password").foregroundStyle(Color.appTextTertiary))
                     .themedField()
 
                 if let error = authStore.lastErrorMessage {

@@ -21,9 +21,9 @@ struct CreatePlaylistView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    TextField("Name", text: $name)
+                    TextField("", text: $name, prompt: Text("Name").foregroundStyle(Color.appTextTertiary))
                         .themedField()
-                    TextField("Description (optional)", text: $description)
+                    TextField("", text: $description, prompt: Text("Description (optional)").foregroundStyle(Color.appTextTertiary))
                         .themedField()
 
                     Toggle(isOn: $isPublic) {

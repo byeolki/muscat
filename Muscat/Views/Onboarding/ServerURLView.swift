@@ -35,7 +35,7 @@ struct ServerURLView: View {
             .padding(.bottom, 36)
 
             VStack(spacing: 16) {
-                TextField("https://music.example.com", text: $urlText)
+                TextField("", text: $urlText, prompt: Text("https://music.example.com").foregroundStyle(Color.appTextTertiary))
                     #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)

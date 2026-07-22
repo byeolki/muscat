@@ -20,22 +20,22 @@ struct RegisterView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 12) {
                         fieldLabel("Account")
-                        TextField("Name", text: $name)
+                        TextField("", text: $name, prompt: Text("Name").foregroundStyle(Color.appTextTertiary))
                             .themedField()
-                        TextField("Email", text: $email)
+                        TextField("", text: $email, prompt: Text("Email").foregroundStyle(Color.appTextTertiary))
                             #if os(iOS)
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)
                             #endif
                             .autocorrectionDisabled()
                             .themedField()
-                        SecureField("Password", text: $password)
+                        SecureField("", text: $password, prompt: Text("Password").foregroundStyle(Color.appTextTertiary))
                             .themedField()
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
                         fieldLabel("Invite code")
-                        TextField("Code from your admin", text: $inviteToken)
+                        TextField("", text: $inviteToken, prompt: Text("Code from your admin").foregroundStyle(Color.appTextTertiary))
                             .autocorrectionDisabled()
                             .themedField()
                         Text("Registration is invite-only. Ask your server admin for a code.")

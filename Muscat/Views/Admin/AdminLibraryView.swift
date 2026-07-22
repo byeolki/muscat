@@ -14,7 +14,7 @@ struct AdminLibraryView: View {
         List {
             Section {
                 VStack(spacing: 12) {
-                    TextField("Server filesystem path (e.g. /music)", text: $newRootPath)
+                    TextField("", text: $newRootPath, prompt: Text("Server filesystem path (e.g. /music)").foregroundStyle(Color.appTextTertiary))
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
                         #endif
