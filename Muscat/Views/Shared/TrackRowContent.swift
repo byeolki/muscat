@@ -10,6 +10,7 @@ struct TrackRowContent: View {
     let title: String
     let artist: String
     let artworkId: String?
+    let fallbackArtworkId: String?
     let isCover: Bool
     let originalArtist: String?
     let duration: Double?
@@ -20,6 +21,7 @@ struct TrackRowContent: View {
         title: String,
         artist: String,
         artworkId: String?,
+        fallbackArtworkId: String? = nil,
         isCover: Bool,
         originalArtist: String? = nil,
         duration: Double?,
@@ -29,6 +31,7 @@ struct TrackRowContent: View {
         self.title = title
         self.artist = artist
         self.artworkId = artworkId
+        self.fallbackArtworkId = fallbackArtworkId
         self.isCover = isCover
         self.originalArtist = originalArtist
         self.duration = duration
@@ -38,7 +41,7 @@ struct TrackRowContent: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: artworkId, cornerRadius: 8)
+            RemoteArtworkView(artworkId: artworkId, fallbackArtworkId: fallbackArtworkId, cornerRadius: 8)
                 .frame(width: 48, height: 48)
 
             VStack(alignment: .leading, spacing: 3) {

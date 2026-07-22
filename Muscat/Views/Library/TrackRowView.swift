@@ -9,6 +9,7 @@ struct TrackRowView: View {
             title: track.title,
             artist: track.displayArtist,
             artworkId: track.artworkId,
+            fallbackArtworkId: track.fallbackArtworkId,
             isCover: track.isCover,
             originalArtist: track.override?.originalArtist,
             duration: track.durationSeconds,

@@ -6,6 +6,7 @@ struct RawTrackRowView: View {
     let title: String
     let artist: String
     let artworkId: String?
+    let fallbackArtworkId: String?
     let isCover: Bool
     let originalArtist: String?
     let duration: Double?
@@ -16,6 +17,7 @@ struct RawTrackRowView: View {
         title = track.title
         artist = track.displayArtist
         artworkId = track.artworkId
+        fallbackArtworkId = track.fallbackArtworkId
         isCover = track.isCover
         originalArtist = track.override?.originalArtist
         duration = track.durationSeconds
@@ -27,6 +29,7 @@ struct RawTrackRowView: View {
         title = entry.title
         artist = entry.displayArtist
         artworkId = entry.artworkId
+        fallbackArtworkId = entry.fallbackArtworkId
         isCover = entry.isCover
         originalArtist = entry.override?.originalArtist
         duration = entry.durationSeconds
@@ -39,6 +42,7 @@ struct RawTrackRowView: View {
             title: title,
             artist: artist,
             artworkId: artworkId,
+            fallbackArtworkId: fallbackArtworkId,
             isCover: isCover,
             originalArtist: originalArtist,
             duration: duration,

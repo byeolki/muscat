@@ -5,6 +5,11 @@ struct MainTabView: View {
     @Environment(PlayerStore.self) private var playerStore
     @State private var showNowPlaying = false
 
+    /// Horizontal inset for the floating mini player — matches the standard HIG margin
+    /// so its edges line up with the system tab bar's own floating inset instead of
+    /// looking narrower/wider than it.
+    static let tabBarMargin: CGFloat = 16
+
     var body: some View {
         TabView {
             tab(TrackListView(), label: Label("Library", systemImage: "music.note.list"))
@@ -28,8 +33,8 @@ struct MainTabView: View {
             .safeAreaInset(edge: .bottom) {
                 if playerStore.currentTrack != nil {
                     MiniPlayerBar(onTap: { showNowPlaying = true })
-                        .padding(.horizontal, 10)
-                        .padding(.bottom, 6)
+                        .padding(.horizontal, Self.tabBarMargin)
+                        .padding(.bottom, 8)
                 }
             }
             .tabItem { label }

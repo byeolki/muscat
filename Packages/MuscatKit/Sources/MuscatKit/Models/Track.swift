@@ -120,6 +120,16 @@ public struct Track: Codable, Hashable, Identifiable {
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
+
+    /// The server checks `artworkId` against albums, then playlists, then track
+    /// thumbnails, purely by id — it has no idea `albumVersionId` was meant to be "the"
+    /// artwork, so an album with no artwork file on disk 404s instead of falling back.
+    /// This is the client-side fallback for that case: the track's own id, only
+    /// meaningful when it's different from `artworkId` and actually has a thumbnail.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
+    }
 }
 
 /// `GET /tracks/:id` detail shape. `title`/`is_cover`/`track_number`/`disc_number` are
@@ -150,8 +160,13 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
         artists.map(\.name).joined(separator: ", ")
     }
 
+    /// Mirrors the server's own `has_video` computation (`tracks.service.ts`):
+    /// a video `Source` row OR a `video_locator` override, either one is enough. The
+    /// streaming endpoint resolves both the same way, so this must check both too, or
+    /// tracks whose video only exists via `video_locator` would silently hide the
+    /// "watch video" entry point even though playback would actually work.
     public var hasVideo: Bool {
-        sources.contains { $0.mediaKind == .video }
+        sources.contains { $0.mediaKind == .video } || override?.videoLocator != nil
     }
 
     /// Best available audio source: prefers higher `priority`, then availability.
@@ -173,6 +188,13 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
     public var artworkId: String? {
         albumVersionId ?? (thumbnailPath != nil ? id : nil)
     }
+
+    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk —
+    /// see `Track.fallbackArtworkId` for why this is needed at all.
+    public var fallbackArtworkId: String? {
+        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
+        return id
+    }
 }
 
 public enum TrackSort: String, CaseIterable {
@@ -192,12 +214,42 @@ public struct FavoriteToggleResponse: Codable {
     public let favorited: Bool
 }
 
-public struct LyricsResponse: Codable {
+/// The server now keys `lyrics` by `(track_id, language)` and both lyrics endpoints
+/// return every stored language as an array (`[]` if none), not a single object/null.
+public struct LyricsResponse: Codable, Hashable, Identifiable {
     public let trackId: String
+    /// ISO 639-1-ish code (e.g. "en", "ko"), or `"und"` for legacy/undetermined rows.
+    public let language: String
     public let type: LyricsType
     public let content: String
     public let source: LyricsSource
     public let updatedAt: Date
+
+    public var id: String { "\(trackId)-\(language)" }
+
+    /// `.synced` content is stored as LRC-style `[mm:ss.ff]text` lines (parsed
+    /// server-side from yt-dlp's manual subtitle tracks) — strip the timestamps for a
+    /// plain read view. Actual sync-to-playback highlighting is a future extension.
+    public var displayText: String {
+        guard type == .synced else { return content }
+        let timestampPrefix = try? NSRegularExpression(pattern: #"^\[\d{2}:\d{2}(?:\.\d{1,3})?\]"#)
+        return content
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { line -> String in
+                let line = String(line)
+                guard let timestampPrefix else { return line }
+                let range = NSRange(line.startIndex..., in: line)
+                return timestampPrefix.stringByReplacingMatches(in: line, range: range, withTemplate: "")
+            }
+            .joined(separator: "\n")
+    }
+
+    /// Human-readable language name for a picker ("English", "Korean"), falling back
+    /// to the raw code for anything `Locale` doesn't recognize (including `"und"`).
+    public var languageDisplayName: String {
+        guard language != "und" else { return "Unknown" }
+        return Locale.current.localizedString(forLanguageCode: language)?.capitalized ?? language.uppercased()
+    }
 }
 
 public enum LyricsType: String, Codable {

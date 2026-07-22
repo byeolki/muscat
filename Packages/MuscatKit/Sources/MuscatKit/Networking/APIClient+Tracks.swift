@@ -29,16 +29,10 @@ extension APIClient {
         return response.favorited
     }
 
-    /// Returns `nil` if the track has no lyrics, regardless of whether the server
-    /// signals that via a `null` body or a 404.
-    public func fetchLyrics(trackId: String) async throws -> LyricsResponse? {
-        do {
-            return try await send(method: "GET", path: "api/v1/tracks/\(trackId)/lyrics") as LyricsResponse
-        } catch APIClientError.decoding {
-            return nil
-        } catch APIClientError.server(let statusCode, _) where statusCode == 404 {
-            return nil
-        }
+    /// One entry per stored language (`lyrics` is keyed by `(track_id, language)`);
+    /// empty array if the track has no lyrics at all.
+    public func fetchLyrics(trackId: String) async throws -> [LyricsResponse] {
+        try await send(method: "GET", path: "api/v1/tracks/\(trackId)/lyrics")
     }
 
     /// Applies a metadata override (title/artist/is_cover/etc). Pass the full current

@@ -1,11 +1,21 @@
 import MuscatKit
 import SwiftUI
 
-/// Floating card above the tab bar with a hairline progress indicator along its
+/// Floating glass pill above the tab bar with a hairline progress indicator along its
 /// bottom edge. Tap anywhere (outside the transport buttons) to open Now Playing.
+///
+/// Uses `.ultraThinMaterial` rather than the iOS 26 `glassEffect()` API — the latter
+/// needs the iOS 26 SDK to even compile, and this environment can't confirm which
+/// Xcode/SDK the project builds against, so a guaranteed-available frosted-glass look
+/// is the safer bet. Visually it's the same "translucent, blurred, thin light rim"
+/// language as the system's Liquid Glass tab bar; matching outer corner radius +
+/// horizontal margin (see `MainTabView.tabBarMargin`) is what actually keeps the two
+/// bars visually unified.
 struct MiniPlayerBar: View {
     @Environment(PlayerStore.self) private var playerStore
     let onTap: () -> Void
+
+    static let cornerRadius: CGFloat = 24
 
     private var progress: Double {
         guard let duration = playerStore.duration, duration > 0 else { return 0 }
@@ -16,8 +26,8 @@ struct MiniPlayerBar: View {
         if let track = playerStore.currentTrack {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
-                    RemoteArtworkView(artworkId: track.artworkId, cornerRadius: 8)
-                        .frame(width: 42, height: 42)
+                    RemoteArtworkView(artworkId: track.artworkId, fallbackArtworkId: track.fallbackArtworkId, cornerRadius: 10)
+                        .frame(width: 40, height: 40)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(track.title)
@@ -38,7 +48,7 @@ struct MiniPlayerBar: View {
                         Image(systemName: playerStore.isPlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color.appTextPrimary)
-                            .frame(width: 38, height: 38)
+                            .frame(width: 36, height: 36)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -49,33 +59,34 @@ struct MiniPlayerBar: View {
                         Image(systemName: "forward.fill")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(playerStore.hasNext ? Color.appTextPrimary : Color.appTextTertiary)
-                            .frame(width: 38, height: 38)
+                            .frame(width: 36, height: 36)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .disabled(!playerStore.hasNext)
                 }
-                .padding(.horizontal, 10)
+                .padding(.leading, 12)
+                .padding(.trailing, 8)
                 .padding(.vertical, 8)
 
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.appBorder)
+                        Capsule().fill(Color.white.opacity(0.15))
                         Capsule()
                             .fill(Color.appAccent)
                             .frame(width: geometry.size.width * progress)
                     }
                 }
                 .frame(height: 2)
-                .padding(.horizontal, 10)
-                .padding(.bottom, 6)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 8)
             }
-            .background(Color.appSurfaceRaised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.appBorder, lineWidth: 1)
+                RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
+            .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
             .contentShape(Rectangle())
             .onTapGesture { onTap() }
         }

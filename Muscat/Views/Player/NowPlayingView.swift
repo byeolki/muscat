@@ -28,7 +28,7 @@ struct NowPlayingView: View {
                 if let track = playerStore.currentTrack {
                     Spacer(minLength: 12)
 
-                    RemoteArtworkView(artworkId: track.artworkId, cornerRadius: 20)
+                    RemoteArtworkView(artworkId: track.artworkId, fallbackArtworkId: track.fallbackArtworkId, cornerRadius: 20)
                         .frame(width: 300, height: 300)
                         .shadow(color: .black.opacity(0.55), radius: 28, y: 14)
 

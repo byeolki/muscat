@@ -60,7 +60,14 @@ final class NowPlayingCenter {
         infoCenter.nowPlayingInfo = nil
     }
 
-    func update(track: QueueTrack, currentSeconds: Double, duration: Double?, isPlaying: Bool, artworkURL: URL?) {
+    func update(
+        track: QueueTrack,
+        currentSeconds: Double,
+        duration: Double?,
+        isPlaying: Bool,
+        artworkURL: URL?,
+        fallbackArtworkURL: URL? = nil
+    ) {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: track.title,
             MPMediaItemPropertyArtist: track.displayArtist,
@@ -72,23 +79,32 @@ final class NowPlayingCenter {
         }
         infoCenter.nowPlayingInfo = info
 
-        guard let artworkURL else { return }
+        guard artworkURL != nil || fallbackArtworkURL != nil else { return }
         artworkTask?.cancel()
         artworkTask = Task { [weak self] in
-            guard let (data, _) = try? await URLSession.shared.data(from: artworkURL) else { return }
-            #if os(iOS)
-            guard let image = UIImage(data: data) else { return }
+            var image = await Self.loadPlatformImage(from: artworkURL)
+            if image == nil {
+                image = await Self.loadPlatformImage(from: fallbackArtworkURL)
+            }
+            guard let image, let self, !Task.isCancelled else { return }
             let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-            #else
-            guard let image = NSImage(data: data) else { return }
-            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-            #endif
-            guard let self, !Task.isCancelled else { return }
             var updated = self.infoCenter.nowPlayingInfo ?? [:]
             updated[MPMediaItemPropertyArtwork] = artwork
             self.infoCenter.nowPlayingInfo = updated
         }
     }
+
+    #if os(iOS)
+    private static func loadPlatformImage(from url: URL?) async -> UIImage? {
+        guard let url, let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+        return UIImage(data: data)
+    }
+    #else
+    private static func loadPlatformImage(from url: URL?) async -> NSImage? {
+        guard let url, let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+        return NSImage(data: data)
+    }
+    #endif
 
     func updatePlaybackRate(isPlaying: Bool) {
         guard var info = infoCenter.nowPlayingInfo else { return }
