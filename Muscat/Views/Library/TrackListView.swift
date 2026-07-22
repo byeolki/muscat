@@ -8,15 +8,33 @@ struct TrackListView: View {
     @State private var tracks: [Track] = []
     @State private var sort: TrackSort = .newest
     @State private var filter: TrackFilter = .all
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<[Track]>()
+    @State private var detailTrackId: String?
 
     var body: some View {
         NavigationStack {
             List {
                 ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
-                    NavigationLink(value: track.id) {
-                        TrackRowView(track: track)
+                    HStack(spacing: 4) {
+                        Button {
+                            playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
+                        } label: {
+                            TrackRowView(track: track)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            detailTrackId = track.id
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(Color.appTextTertiary)
+                                .padding(.vertical, 12)
+                                .padding(.leading, 6)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .themedRow()
                     .contextMenu {
@@ -41,7 +59,7 @@ struct TrackListView: View {
             .listStyle(.plain)
             .themedList()
             .navigationTitle("Library")
-            .navigationDestination(for: String.self) { trackId in
+            .navigationDestination(item: $detailTrackId) { trackId in
                 if let index = tracks.firstIndex(where: { $0.id == trackId }) {
                     TrackDetailView(
                         trackId: trackId,
@@ -72,9 +90,9 @@ struct TrackListView: View {
                 }
             }
             .overlay {
-                if isLoading && tracks.isEmpty {
+                if loadState.isLoading && tracks.isEmpty {
                     ProgressView().tint(Color.appAccent)
-                } else if let errorMessage, tracks.isEmpty {
+                } else if let errorMessage = loadState.errorMessage, tracks.isEmpty {
                     EmptyStateView(systemImage: "exclamationmark.circle", message: errorMessage)
                 } else if tracks.isEmpty {
                     EmptyStateView(systemImage: "music.note.list", message: "No tracks yet.")
@@ -86,13 +104,8 @@ struct TrackListView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            tracks = try await appEnvironment.apiClient.fetchTracks(sort: sort, filter: filter)
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchTracks(sort: sort, filter: filter) }) {
+            tracks = result
         }
     }
 }

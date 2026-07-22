@@ -48,7 +48,7 @@ public extension QueueTrack {
         self.init(
             id: track.id,
             title: track.title,
-            displayArtist: track.artist ?? "",
+            displayArtist: track.displayArtist,
             artworkId: track.artworkId,
             duration: track.durationSeconds
         )

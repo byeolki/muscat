@@ -19,6 +19,7 @@ struct TrackDetailView: View {
     @State private var errorMessage: String?
     @State private var isFavorited = false
     @State private var showVideo = false
+    @State private var showEdit = false
 
     var body: some View {
         ScrollView {
@@ -112,12 +113,28 @@ struct TrackDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showEdit = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(Color.appAccent)
+                }
+                .disabled(detail == nil)
+            }
+        }
         .task {
             isFavorited = initialIsFavorited
             await load()
         }
         .sheet(isPresented: $showVideo) {
             VideoPlayerView(trackId: trackId, title: detail?.title ?? "")
+        }
+        .sheet(isPresented: $showEdit) {
+            if let detail {
+                TrackEditView(track: detail) { await load() }
+            }
         }
     }
 

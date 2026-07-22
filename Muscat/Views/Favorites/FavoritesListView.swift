@@ -6,8 +6,8 @@ struct FavoritesListView: View {
     @Environment(PlayerStore.self) private var playerStore
 
     @State private var favorites: [FavoriteEntry] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<[FavoriteEntry]>()
+    @State private var detailTrackId: String?
 
     private var queue: [QueueTrack] {
         favorites.map { QueueTrack($0.track) }
@@ -17,8 +17,26 @@ struct FavoritesListView: View {
         NavigationStack {
             List {
                 ForEach(Array(favorites.enumerated()), id: \.element.id) { index, entry in
-                    NavigationLink(value: entry.track.id) {
-                        RawTrackRowView(track: entry.track)
+                    HStack(spacing: 4) {
+                        Button {
+                            playerStore.play(tracks: queue, startAt: index)
+                        } label: {
+                            RawTrackRowView(track: entry.track)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            detailTrackId = entry.track.id
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(Color.appTextTertiary)
+                                .padding(.vertical, 12)
+                                .padding(.leading, 6)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .themedRow()
                     .contextMenu {
@@ -38,16 +56,16 @@ struct FavoritesListView: View {
             .listStyle(.plain)
             .themedList()
             .navigationTitle("Favorites")
-            .navigationDestination(for: String.self) { trackId in
+            .navigationDestination(item: $detailTrackId) { trackId in
                 if let index = favorites.firstIndex(where: { $0.track.id == trackId }) {
                     TrackDetailView(trackId: trackId, queue: queue, index: index, initialIsFavorited: true)
                 }
             }
             .overlay {
-                if isLoading && favorites.isEmpty {
+                if loadState.isLoading && favorites.isEmpty {
                     ProgressView().tint(Color.appAccent)
                 } else if favorites.isEmpty {
-                    EmptyStateView(systemImage: "heart", message: errorMessage ?? "No favorited tracks yet.")
+                    EmptyStateView(systemImage: "heart", message: loadState.errorMessage ?? "No favorited tracks yet.")
                 }
             }
             .refreshable { await load() }
@@ -56,13 +74,8 @@ struct FavoritesListView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            favorites = try await appEnvironment.apiClient.fetchFavorites()
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchFavorites() }) {
+            favorites = result
         }
     }
 
@@ -71,7 +84,7 @@ struct FavoritesListView: View {
             _ = try await appEnvironment.apiClient.removeFavorite(trackId: trackId)
             favorites.removeAll { $0.track.id == trackId }
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

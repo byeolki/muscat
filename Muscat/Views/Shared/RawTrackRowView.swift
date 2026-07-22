@@ -1,60 +1,49 @@
 import MuscatKit
 import SwiftUI
 
-/// Row for track lists backed by `RawTrack`/`PlaylistTrackEntry` (favorites, playlists)
-/// — no `artists` array or favorite/video flags on these, unlike the library list.
+/// Row for track lists backed by `RawTrack`/`PlaylistTrackEntry` (favorites, playlists).
 struct RawTrackRowView: View {
     let title: String
-    let artist: String?
+    let artist: String
     let artworkId: String?
     let isCover: Bool
+    let originalArtist: String?
     let duration: Double?
+    let hasVideo: Bool
+    let isFavorited: Bool
 
     init(track: RawTrack) {
         title = track.title
-        artist = track.artist
+        artist = track.displayArtist
         artworkId = track.artworkId
         isCover = track.isCover
+        originalArtist = track.override?.originalArtist
         duration = track.durationSeconds
+        hasVideo = track.hasVideo
+        isFavorited = track.isFavorited
     }
 
     init(entry: PlaylistTrackEntry) {
         title = entry.title
-        artist = entry.artist
+        artist = entry.displayArtist
         artworkId = entry.artworkId
         isCover = entry.isCover
+        originalArtist = entry.override?.originalArtist
         duration = entry.durationSeconds
+        hasVideo = entry.hasVideo
+        isFavorited = entry.isFavorited
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: artworkId, cornerRadius: 8)
-                .frame(width: 48, height: 48)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.appTextPrimary)
-                    .lineLimit(1)
-                artistLineText(
-                    artist: artist ?? "",
-                    isCover: isCover,
-                    originalArtist: nil
-                )
-                .font(.caption)
-                .lineLimit(1)
-            }
-
-            Spacer(minLength: 8)
-
-            if let duration {
-                Text(TrackRowView.formatted(duration))
-                    .font(.caption)
-                    .foregroundStyle(Color.appTextTertiary)
-                    .monospacedDigit()
-            }
-        }
-        .padding(.vertical, 2)
-        .contentShape(Rectangle())
+        TrackRowContent(
+            title: title,
+            artist: artist,
+            artworkId: artworkId,
+            isCover: isCover,
+            originalArtist: originalArtist,
+            duration: duration,
+            hasVideo: hasVideo,
+            isFavorited: isFavorited
+        )
     }
 }

@@ -33,6 +33,21 @@ public struct TrackMetadataOverride: Codable, Hashable {
     public let updatedBy: String?
 }
 
+struct TrackMetadataUpdateRequest: Encodable {
+    let title: String?
+    let artist: String?
+    let originalArtist: String?
+    let isCover: Bool?
+    let videoLocator: String?
+    let trackNumber: Int?
+    let discNumber: Int?
+    let alternateTitles: String?
+}
+
+struct TrackThumbnailUploadResponse: Decodable {
+    let thumbnailPath: String
+}
+
 public struct Source: Codable, Hashable, Identifiable {
     public let id: String
     public let trackId: String
