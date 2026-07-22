@@ -13,8 +13,7 @@ struct PlaylistDetailView: View {
     let playlistId: String
 
     @State private var playlist: PlaylistDetail?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<PlaylistDetail>()
     @State private var showAddTracks = false
     @State private var showEdit = false
     @State private var showDeleteConfirm = false
@@ -85,7 +84,7 @@ struct PlaylistDetailView: View {
                 .onMove(perform: isOwner ? moveTracks : nil)
             }
 
-            if let errorMessage {
+            if let errorMessage = loadState.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .themedRow()
             }
@@ -142,7 +141,7 @@ struct PlaylistDetailView: View {
             #endif
         }
         .overlay {
-            if isLoading && playlist == nil {
+            if loadState.isLoading && playlist == nil {
                 ProgressView().tint(Color.appAccent)
             }
         }
@@ -166,13 +165,8 @@ struct PlaylistDetailView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            playlist = try await appEnvironment.apiClient.fetchPlaylist(id: playlistId)
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchPlaylist(id: playlistId) }) {
+            playlist = result
         }
     }
 
@@ -192,7 +186,7 @@ struct PlaylistDetailView: View {
         do {
             playlist = try await appEnvironment.apiClient.updatePlaylist(id: playlistId, trackIds: trackIds)
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
             await load()
         }
     }
@@ -202,7 +196,7 @@ struct PlaylistDetailView: View {
             try await appEnvironment.apiClient.deletePlaylist(id: playlistId)
             dismiss()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

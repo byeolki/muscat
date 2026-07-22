@@ -5,47 +5,16 @@ struct TrackRowView: View {
     let track: Track
 
     var body: some View {
-        HStack(spacing: 12) {
-            RemoteArtworkView(artworkId: track.artworkId, cornerRadius: 8)
-                .frame(width: 48, height: 48)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(track.title)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.appTextPrimary)
-                    .lineLimit(1)
-                artistLineText(
-                    artist: track.displayArtist,
-                    isCover: track.isCover,
-                    originalArtist: track.override?.originalArtist
-                )
-                .font(.caption)
-                .lineLimit(1)
-            }
-
-            Spacer(minLength: 8)
-
-            HStack(spacing: 8) {
-                if track.hasVideo {
-                    Image(systemName: "video.fill")
-                        .font(.caption2)
-                        .foregroundStyle(Color.appTextTertiary)
-                }
-                if track.isFavorited {
-                    Image(systemName: "heart.fill")
-                        .font(.caption2)
-                        .foregroundStyle(Color.appAccent)
-                }
-                if let duration = track.durationSeconds {
-                    Text(Self.formatted(duration))
-                        .font(.caption)
-                        .foregroundStyle(Color.appTextTertiary)
-                        .monospacedDigit()
-                }
-            }
-        }
-        .padding(.vertical, 2)
-        .contentShape(Rectangle())
+        TrackRowContent(
+            title: track.title,
+            artist: track.displayArtist,
+            artworkId: track.artworkId,
+            isCover: track.isCover,
+            originalArtist: track.override?.originalArtist,
+            duration: track.durationSeconds,
+            hasVideo: track.hasVideo,
+            isFavorited: track.isFavorited
+        )
     }
 
     static func formatted(_ seconds: Double) -> String {

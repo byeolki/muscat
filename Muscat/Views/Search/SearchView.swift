@@ -7,8 +7,7 @@ struct SearchView: View {
 
     @State private var query = ""
     @State private var results: SearchResults?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<SearchResults>()
     @State private var selectedAlbum: AlbumSheetItem?
 
     var body: some View {
@@ -98,7 +97,7 @@ struct SearchView: View {
                     }
                 }
 
-                if let errorMessage {
+                if let errorMessage = loadState.errorMessage {
                     ErrorBanner(message: errorMessage)
                         .themedRow()
                 }
@@ -108,7 +107,7 @@ struct SearchView: View {
             .navigationTitle("Search")
             .searchable(text: $query, prompt: "Search tracks, artists, albums")
             .overlay {
-                if isLoading {
+                if loadState.isLoading {
                     ProgressView().tint(Color.appAccent)
                 } else if let results,
                           (results.tracks?.isEmpty ?? true),
@@ -151,13 +150,8 @@ struct SearchView: View {
             results = nil
             return
         }
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            results = try await appEnvironment.apiClient.search(query: trimmed)
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.search(query: trimmed) }) {
+            results = result
         }
     }
 }
