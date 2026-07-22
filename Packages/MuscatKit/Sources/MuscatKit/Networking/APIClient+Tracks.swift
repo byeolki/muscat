@@ -49,14 +49,15 @@ extension APIClient {
         videoLocator: String? = nil,
         trackNumber: Int? = nil,
         discNumber: Int? = nil,
-        alternateTitles: String? = nil
+        alternateTitles: String? = nil,
+        volumeDb: Double? = nil
     ) async throws -> TrackDetail {
         try await send(
             method: "PATCH", path: "api/v1/tracks/\(trackId)/metadata",
             body: TrackMetadataUpdateRequest(
                 title: title, artist: artist, originalArtist: originalArtist, isCover: isCover,
                 videoLocator: videoLocator, trackNumber: trackNumber, discNumber: discNumber,
-                alternateTitles: alternateTitles
+                alternateTitles: alternateTitles, volumeDb: volumeDb
             )
         )
     }

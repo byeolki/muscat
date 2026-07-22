@@ -29,6 +29,9 @@ public struct TrackMetadataOverride: Codable, Hashable {
     public let trackNumber: Int?
     public let discNumber: Int?
     public let alternateTitles: String?
+    /// Manual per-track gain adjustment in dB, independent of the player's `normalize`
+    /// auto-leveling toggle — compensates for one specific file's own inherent loudness.
+    public let volumeDb: Double?
     public let updatedAt: Date?
     public let updatedBy: String?
 }
@@ -42,6 +45,7 @@ struct TrackMetadataUpdateRequest: Encodable {
     let trackNumber: Int?
     let discNumber: Int?
     let alternateTitles: String?
+    let volumeDb: Double?
 }
 
 struct TrackThumbnailUploadResponse: Decodable {

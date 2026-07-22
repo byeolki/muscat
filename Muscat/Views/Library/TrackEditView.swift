@@ -23,6 +23,7 @@ struct TrackEditView: View {
     @State private var coverByArtist: String
     @State private var isCover: Bool
     @State private var alternateTitles: String
+    @State private var volumeDb: Double
 
     @State private var hasThumbnail: Bool
     @State private var thumbnailBust = 0
@@ -44,6 +45,7 @@ struct TrackEditView: View {
         _coverByArtist = State(initialValue: ov?.artist ?? track.displayArtist)
         _isCover = State(initialValue: ov?.isCover ?? track.isCover)
         _alternateTitles = State(initialValue: ov?.alternateTitles ?? "")
+        _volumeDb = State(initialValue: ov?.volumeDb ?? 0)
         _hasThumbnail = State(initialValue: track.thumbnailPath != nil)
     }
 
@@ -81,6 +83,31 @@ struct TrackEditView: View {
                             prompt: Text("Alternate names (comma-separated)").foregroundStyle(Color.appTextTertiary)
                         )
                         .themedField()
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            fieldLabel("Volume adjustment")
+                            Spacer()
+                            Text(volumeDb == 0 ? "0 dB" : String(format: "%+.1f dB", volumeDb))
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(Color.appTextSecondary)
+                            if volumeDb != 0 {
+                                Button {
+                                    volumeDb = 0
+                                } label: {
+                                    Image(systemName: "arrow.counterclockwise")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.appTextTertiary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        Slider(value: $volumeDb, in: -20...20, step: 0.5)
+                            .tint(Color.appAccent)
+                        Text("Compensates for this specific file's own loudness — independent of the player's Normalize toggle.")
+                            .font(.caption2)
+                            .foregroundStyle(Color.appTextTertiary)
                     }
 
                     if let errorMessage {
@@ -182,7 +209,8 @@ struct TrackEditView: View {
                 artist: coverByArtist.isEmpty ? nil : coverByArtist,
                 originalArtist: artist.isEmpty ? nil : artist,
                 isCover: isCover,
-                alternateTitles: alternateTitles.isEmpty ? nil : alternateTitles
+                alternateTitles: alternateTitles.isEmpty ? nil : alternateTitles,
+                volumeDb: volumeDb
             )
             await onSaved()
             dismiss()
