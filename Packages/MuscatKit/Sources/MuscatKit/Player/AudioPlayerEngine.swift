@@ -12,11 +12,19 @@ final class AudioPlayerEngine {
     var onDurationAvailable: ((_ seconds: Double) -> Void)?
     var onDidFinishPlaying: (() -> Void)?
     var onPlaybackStalled: (() -> Void)?
+    /// Fired when the item never becomes playable at all (401/404/5xx from the stream
+    /// endpoint, an undecodable codec, a crashed transcode, ...) or fails mid-playback.
+    /// Without this, `AVPlayer` swallows those failures internally — nothing plays, no
+    /// error surfaces, and the caller's optimistic `isPlaying = true` from `load(autoplay:)`
+    /// is never corrected, so the UI is stuck showing "playing" over silence.
+    var onFailedToLoad: ((_ message: String) -> Void)?
 
     private var player: AVPlayer?
     private var timeObserverToken: Any?
     private var didFinishObserver: NSObjectProtocol?
     private var stalledObserver: NSObjectProtocol?
+    private var failedToPlayObserver: NSObjectProtocol?
+    private var statusObservation: NSKeyValueObservation?
     private var durationLoadTask: Task<Void, Never>?
 
     var isPlaying: Bool { (player?.rate ?? 0) > 0 }
@@ -89,6 +97,27 @@ final class AudioPlayerEngine {
         ) { [weak self] _ in
             self?.onPlaybackStalled?()
         }
+
+        failedToPlayObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] notification in
+            let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? NSError
+            self?.onFailedToLoad?(error?.localizedDescription ?? "Playback failed.")
+        }
+
+        // `AVPlayerItemFailedToPlayToEndTime` only fires for failures *during* playback.
+        // A stream that never becomes playable at all (e.g. a 401/404 from the URL, so
+        // there's no media to play in the first place) instead just parks the item at
+        // `.status == .failed` with no notification — KVO is the only way to catch that.
+        statusObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+            guard item.status == .failed else { return }
+            let message = item.error?.localizedDescription ?? "Couldn't load this track."
+            DispatchQueue.main.async {
+                self?.onFailedToLoad?(message)
+            }
+        }
     }
 
     private func teardownCurrentItem() {
@@ -106,6 +135,12 @@ final class AudioPlayerEngine {
             NotificationCenter.default.removeObserver(stalledObserver)
         }
         stalledObserver = nil
+        if let failedToPlayObserver {
+            NotificationCenter.default.removeObserver(failedToPlayObserver)
+        }
+        failedToPlayObserver = nil
+        statusObservation?.invalidate()
+        statusObservation = nil
     }
 
     deinit {
@@ -118,5 +153,9 @@ final class AudioPlayerEngine {
         if let stalledObserver {
             NotificationCenter.default.removeObserver(stalledObserver)
         }
+        if let failedToPlayObserver {
+            NotificationCenter.default.removeObserver(failedToPlayObserver)
+        }
+        statusObservation?.invalidate()
     }
 }

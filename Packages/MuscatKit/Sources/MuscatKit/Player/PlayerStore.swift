@@ -166,6 +166,14 @@ public final class PlayerStore {
         engine.onPlaybackStalled = { [weak self] in
             self?.errorMessage = "Playback stalled. Check your network connection."
         }
+        engine.onFailedToLoad = { [weak self] message in
+            guard let self else { return }
+            self.isPlaying = false
+            self.isLoading = false
+            self.errorMessage = message
+            self.nowPlaying.updatePlaybackRate(isPlaying: false)
+            self.updateLiveActivity()
+        }
     }
 
     private func wireNowPlayingCallbacks() {
