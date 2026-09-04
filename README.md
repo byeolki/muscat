@@ -10,6 +10,7 @@
   <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white" alt="macOS 14+" />
   <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift 5.9" />
   <img src="https://img.shields.io/badge/SwiftUI-Observation-0071e3" alt="SwiftUI + Observation" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT" /></a>
 </p>
 
 ---
@@ -139,3 +140,13 @@ Worth knowing before you file an issue — these are deliberate, not oversights:
 
 Issues and pull requests welcome. Please make sure `swift build`, `swift test` and
 both `xcodebuild` commands above pass — they're the whole gate right now.
+
+## License
+
+[MIT](LICENSE) — do what you like with it, including shipping a fork to the App
+Store.
+
+Note that the server it talks to, [Podo](https://github.com/byeolki/podo), is
+AGPL-3.0. The two are separate programs communicating over HTTP, so the server's
+copyleft doesn't reach this client; a permissive license here is what keeps
+building your own client (or forking this one) worth doing.
