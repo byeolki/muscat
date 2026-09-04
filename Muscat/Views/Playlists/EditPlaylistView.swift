@@ -149,6 +149,7 @@ struct EditPlaylistView: View {
     private func deleteCover() async {
         do {
             try await appEnvironment.apiClient.deletePlaylistCover(playlistId: playlist.id)
+            await onSaved()
         } catch {
             errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }
@@ -183,6 +184,7 @@ struct EditPlaylistView: View {
             _ = try await appEnvironment.apiClient.uploadPlaylistCover(
                 playlistId: playlist.id, imageData: data, filename: filename, mimeType: mimeType
             )
+            await onSaved()
         } catch {
             errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }

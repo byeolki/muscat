@@ -6,9 +6,8 @@ struct MyFilesView: View {
     @Environment(AppEnvironment.self) private var appEnvironment
 
     @State private var files: [UploadedFileEntry] = []
-    @State private var isLoading = false
+    @State private var loadState = LoadableState<[UploadedFileEntry]>()
     @State private var isUploading = false
-    @State private var errorMessage: String?
     @State private var showFileImporter = false
     @State private var renamingFile: UploadedFileEntry?
     @State private var renameText = ""
@@ -40,6 +39,15 @@ struct MyFilesView: View {
                         Text(file.filename)
                             .font(.caption)
                             .foregroundStyle(Color.appTextSecondary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 8)
+                    if let sourceUrl = file.sourceUrl, let url = URL(string: sourceUrl) {
+                        Link(destination: url) {
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundStyle(Color.appTextTertiary)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.vertical, 2)
@@ -59,7 +67,7 @@ struct MyFilesView: View {
                     .tint(.appAccent)
                 }
             }
-            if let errorMessage {
+            if let errorMessage = loadState.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -80,9 +88,9 @@ struct MyFilesView: View {
             }
         }
         .overlay {
-            if isLoading && files.isEmpty {
+            if loadState.isLoading && files.isEmpty {
                 ProgressView().tint(Color.appAccent)
-            } else if files.isEmpty && !isLoading {
+            } else if files.isEmpty && !loadState.isLoading {
                 EmptyStateView(systemImage: "tray.and.arrow.up", message: "No uploaded files yet.")
             }
         }
@@ -115,21 +123,14 @@ struct MyFilesView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            files = try await appEnvironment.apiClient.fetchMyUploadedFiles()
-        } catch {
-            errorMessage =
-                (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchMyUploadedFiles() }) {
+            files = result
         }
     }
 
     private func handleImport(_ result: Result<[URL], Error>) async {
         guard let urls = try? result.get() else { return }
         isUploading = true
-        errorMessage = nil
         defer { isUploading = false }
         for url in urls {
             let accessed = url.startAccessingSecurityScopedResource()
@@ -141,8 +142,7 @@ struct MyFilesView: View {
                     mimeType: "application/octet-stream"
                 )
             } catch {
-                errorMessage =
-                    (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+                loadState.fail(error)
             }
         }
         await load()
@@ -155,8 +155,7 @@ struct MyFilesView: View {
                 sourceId: file.sourceId, filename: newName)
             await load()
         } catch {
-            errorMessage =
-                (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 
@@ -165,8 +164,7 @@ struct MyFilesView: View {
             try await appEnvironment.apiClient.deleteUploadedFile(sourceId: file.sourceId)
             files.removeAll { $0.id == file.id }
         } catch {
-            errorMessage =
-                (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

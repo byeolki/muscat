@@ -35,10 +35,11 @@ extension APIClient {
         try await send(method: "GET", path: "api/v1/tracks/\(trackId)/lyrics")
     }
 
-    /// Applies a metadata override (title/artist/is_cover/etc). Pass the full current
-    /// form state for every field, not just changed ones — `nil` is encoded as JSON
-    /// `null`, and the server treats an explicit `null` as "clear this field," not
-    /// "leave it alone" (same convention `updatePlaylist` already relies on).
+    /// Applies a metadata override (title/artist/is_cover/etc).
+    ///
+    /// `nil` means "leave this field alone": Swift's synthesized encoding omits nil
+    /// optionals entirely, and the server only writes the keys that are present. To
+    /// *clear* a field, send an empty string — the server maps `''` to SQL NULL.
     @discardableResult
     public func updateTrackMetadata(
         trackId: String,

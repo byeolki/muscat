@@ -77,9 +77,12 @@ final class AudioPlayerEngine {
 
     private func attachObservers(to item: AVPlayerItem, player: AVPlayer) {
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        // Every callback below is delivered on the main queue (`queue: .main`, or an
+        // explicit dispatch), which is exactly this class's `@MainActor` isolation —
+        // but the closures are typed `@Sendable`, so the compiler needs to be told.
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             guard time.isValid else { return }
-            self?.onPeriodicTimeUpdate?(time.seconds)
+            MainActor.assumeIsolated { self?.onPeriodicTimeUpdate?(time.seconds) }
         }
 
         didFinishObserver = NotificationCenter.default.addObserver(
@@ -87,7 +90,7 @@ final class AudioPlayerEngine {
             object: item,
             queue: .main
         ) { [weak self] _ in
-            self?.onDidFinishPlaying?()
+            MainActor.assumeIsolated { self?.onDidFinishPlaying?() }
         }
 
         stalledObserver = NotificationCenter.default.addObserver(
@@ -95,7 +98,7 @@ final class AudioPlayerEngine {
             object: item,
             queue: .main
         ) { [weak self] _ in
-            self?.onPlaybackStalled?()
+            MainActor.assumeIsolated { self?.onPlaybackStalled?() }
         }
 
         failedToPlayObserver = NotificationCenter.default.addObserver(
@@ -104,7 +107,8 @@ final class AudioPlayerEngine {
             queue: .main
         ) { [weak self] notification in
             let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? NSError
-            self?.onFailedToLoad?(error?.localizedDescription ?? "Playback failed.")
+            let message = error?.localizedDescription ?? "Playback failed."
+            MainActor.assumeIsolated { self?.onFailedToLoad?(message) }
         }
 
         // `AVPlayerItemFailedToPlayToEndTime` only fires for failures *during* playback.
@@ -115,7 +119,7 @@ final class AudioPlayerEngine {
             guard item.status == .failed else { return }
             let message = item.error?.localizedDescription ?? "Couldn't load this track."
             DispatchQueue.main.async {
-                self?.onFailedToLoad?(message)
+                MainActor.assumeIsolated { self?.onFailedToLoad?(message) }
             }
         }
     }
