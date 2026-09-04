@@ -34,6 +34,11 @@ Swift package (`MuscatKit`) that holds everything that isn't a view.
 - **Playlists** — create, edit, reorder by drag, delete, set a cover image, and
   mint public radio URLs for anyone to stream
 - **Favorites, search** (tracks / artists / albums), **artist-seeded radio**
+- **Favorites-only playback** — play just the tracks you starred inside a playlist
+- **Sleep timer** — stop after 15/30/45/60/90 minutes, or at the end of the
+  current track, with a live countdown on the Now Playing screen
+- **Playlist auto-sync** — link a playlist to one on YouTube/SoundCloud/… and let
+  the server top it up (admin only, since it downloads)
 - **Uploads** — send files from Files/iCloud, rename and delete your own
 - **Admin** — invite codes, user list, storage usage, library roots and scans
 - **Music videos** — plays a track's video source when it has one

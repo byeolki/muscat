@@ -65,4 +65,40 @@ extension APIClient {
     public func deletePlaylistCover(playlistId: String) async throws {
         try await sendNoContent(method: "DELETE", path: "api/v1/playlists/\(playlistId)/cover")
     }
+
+    // MARK: - Auto-sync
+
+    /// `nil` when the playlist isn't linked to anything.
+    public func fetchSubscription(playlistId: String) async throws -> PlaylistSubscription? {
+        try await send(method: "GET", path: "api/v1/playlists/\(playlistId)/subscription")
+    }
+
+    /// Admin-only: subscribing pulls media onto the server, same bar as any
+    /// other download. Syncs once immediately, so the response already reflects
+    /// a run in progress.
+    @discardableResult
+    public func setSubscription(
+        playlistId: String,
+        sourceURL: String,
+        intervalMinutes: Int? = nil,
+        audioOnly: Bool? = nil,
+        enabled: Bool? = nil
+    ) async throws -> PlaylistSubscription? {
+        try await send(
+            method: "PUT", path: "api/v1/playlists/\(playlistId)/subscription",
+            body: SetSubscriptionRequest(
+                sourceUrl: sourceURL, intervalMinutes: intervalMinutes,
+                audioOnly: audioOnly, enabled: enabled
+            )
+        )
+    }
+
+    public func deleteSubscription(playlistId: String) async throws {
+        try await sendNoContent(method: "DELETE", path: "api/v1/playlists/\(playlistId)/subscription")
+    }
+
+    @discardableResult
+    public func syncSubscriptionNow(playlistId: String) async throws -> PlaylistSyncResult {
+        try await send(method: "POST", path: "api/v1/playlists/\(playlistId)/subscription/sync")
+    }
 }
