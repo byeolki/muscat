@@ -17,11 +17,14 @@ public final class PlayerStore {
     /// Per-track loudness leveling (server-side ReplayGain/loudnorm via ffmpeg) so
     /// quiet and loud tracks don't require a volume tweak between songs.
     public private(set) var normalize: Bool
+    /// Stops playback after a delay, or at the end of the current track.
+    public private(set) var sleepTimer: SleepTimer = .off
 
     private static let repeatModeDefaultsKey = "muscat.repeatMode"
     private static let normalizeDefaultsKey = "muscat.normalize"
 
     private var queue = PlaybackQueue()
+    private var sleepTimerTask: Task<Void, Never>?
     private let engine = AudioPlayerEngine()
     private let nowPlaying = NowPlayingCenter()
     private let apiClient: APIClient
@@ -48,6 +51,40 @@ public final class PlayerStore {
     /// web client disabling its next button only when `repeatMode !== 'all'`.
     public var hasNext: Bool { queue.hasNext || (repeatMode == .all && !queue.items.isEmpty) }
     public var hasPrevious: Bool { queue.hasPrevious }
+
+    // MARK: - Sleep timer
+
+    /// Arms (or cancels) the sleep timer. A deadline is held as an absolute
+    /// `Date` rather than a countdown so it stays correct while the app is
+    /// suspended in the background — which is exactly when it's being used.
+    public func setSleepTimer(_ timer: SleepTimer) {
+        sleepTimerTask?.cancel()
+        sleepTimerTask = nil
+        sleepTimer = timer
+
+        guard case .at(let deadline) = timer else { return }
+        sleepTimerTask = Task { [weak self] in
+            let seconds = deadline.timeIntervalSinceNow
+            if seconds > 0 {
+                try? await Task.sleep(for: .seconds(seconds))
+            }
+            guard !Task.isCancelled else { return }
+            self?.fireSleepTimer()
+        }
+    }
+
+    /// Seconds left on a deadline timer, for a live countdown in the UI.
+    public var sleepTimerRemaining: TimeInterval? {
+        guard case .at(let deadline) = sleepTimer else { return nil }
+        return max(0, deadline.timeIntervalSinceNow)
+    }
+
+    private func fireSleepTimer() {
+        sleepTimerTask?.cancel()
+        sleepTimerTask = nil
+        sleepTimer = .off
+        pause()
+    }
 
     public func cycleRepeatMode() {
         let order = RepeatMode.allCases
@@ -99,6 +136,12 @@ public final class PlayerStore {
     /// Natural end-of-track (as opposed to a manual "skip next" tap): repeat-one loops
     /// the same track in place instead of advancing.
     private func handleTrackDidFinish() {
+        // An "end of track" sleep timer outranks repeat and auto-advance; that's
+        // the entire point of choosing it over a fixed delay.
+        if case .endOfTrack = sleepTimer {
+            fireSleepTimer()
+            return
+        }
         guard repeatMode == .one else {
             skipToNext()
             return

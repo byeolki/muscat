@@ -9,6 +9,9 @@ struct NowPlayingView: View {
     /// updates mid-gesture.
     @State private var scrubPosition: Double?
     @State private var isScrubbing = false
+    @State private var showSleepTimer = false
+    /// Ticks once a second purely to redraw the countdown chip.
+    @State private var now = Date()
 
     var body: some View {
         ZStack {
@@ -71,6 +74,36 @@ struct NowPlayingView: View {
         #if os(macOS)
         .frame(minWidth: 420, minHeight: 640)
         #endif
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now = $0 }
+        .confirmationDialog("Sleep timer", isPresented: $showSleepTimer, titleVisibility: .visible) {
+            ForEach(SleepTimer.presetMinutes, id: \.self) { minutes in
+                Button("Stop in \(minutes) minutes") {
+                    playerStore.setSleepTimer(.minutes(minutes))
+                }
+            }
+            Button("Stop at end of this track") {
+                playerStore.setSleepTimer(.endOfTrack)
+            }
+            if playerStore.sleepTimer.isActive {
+                Button("Cancel timer", role: .destructive) {
+                    playerStore.setSleepTimer(.off)
+                }
+            }
+        }
+    }
+
+    /// "23m" for a deadline, "end" for end-of-track, nothing when off. Reads
+    /// `now` so the SwiftUI dependency on the 1s ticker is explicit.
+    private var sleepTimerLabel: String? {
+        switch playerStore.sleepTimer {
+        case .off:
+            return nil
+        case .endOfTrack:
+            return "end"
+        case .at(let deadline):
+            let minutes = max(0, Int((deadline.timeIntervalSince(now) / 60).rounded(.up)))
+            return "\(minutes)m"
+        }
     }
 
     private var header: some View {
@@ -197,6 +230,26 @@ struct NowPlayingView: View {
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("Normalize volume")
+
+            Spacer()
+
+            Button {
+                showSleepTimer = true
+            } label: {
+                VStack(spacing: 1) {
+                    Image(systemName: playerStore.sleepTimer.isActive ? "moon.fill" : "moon")
+                        .font(.system(size: 17, weight: .medium))
+                    if let label = sleepTimerLabel {
+                        Text(label)
+                            .font(.system(size: 9, weight: .semibold))
+                            .monospacedDigit()
+                    }
+                }
+                .foregroundStyle(playerStore.sleepTimer.isActive ? Color.appAccent : Color.appTextTertiary)
+                .frame(width: 52, height: 52)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Sleep timer")
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 24)

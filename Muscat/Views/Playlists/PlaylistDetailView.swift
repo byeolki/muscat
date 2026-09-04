@@ -18,15 +18,28 @@ struct PlaylistDetailView: View {
     @State private var showEdit = false
     @State private var showDeleteConfirm = false
     @State private var showRadioTokens = false
+    @State private var showSync = false
+    @State private var favoritesOnly = false
 
     private var isOwner: Bool {
         guard let playlist, let user = authStore.currentUser else { return false }
         return playlist.ownerUserId == user.id
     }
 
-    private var queue: [QueueTrack] {
-        (playlist?.tracks ?? []).map { QueueTrack($0) }
+    private var allEntries: [PlaylistTrackEntry] { playlist?.tracks ?? [] }
+    private var favoriteEntries: [PlaylistTrackEntry] { allEntries.filter(\.isFavorited) }
+
+    /// Filtered client-side so the toggle is instant and the queue you play is
+    /// exactly the list on screen.
+    private var visibleEntries: [PlaylistTrackEntry] {
+        favoritesOnly ? favoriteEntries : allEntries
     }
+
+    private var queue: [QueueTrack] {
+        visibleEntries.map { QueueTrack($0) }
+    }
+
+    private var isAdmin: Bool { authStore.currentUser?.role == .admin }
 
     var body: some View {
         List {
@@ -53,10 +66,19 @@ struct PlaylistDetailView: View {
                             .foregroundStyle(Color.appTextTertiary)
                         }
                     }
+                    if !favoriteEntries.isEmpty {
+                        Picker("", selection: $favoritesOnly) {
+                            Text("All \(allEntries.count)").tag(false)
+                            Text("Favorites \(favoriteEntries.count)").tag(true)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(maxWidth: 260)
+                    }
+
                     Button {
                         playerStore.play(tracks: queue, startAt: 0)
                     } label: {
-                        Label("Play All", systemImage: "play.fill")
+                        Label(favoritesOnly ? "Play Favorites" : "Play All", systemImage: "play.fill")
                     }
                     .buttonStyle(AccentButtonStyle())
                     .disabled(queue.isEmpty)
@@ -69,9 +91,9 @@ struct PlaylistDetailView: View {
             }
 
             Section {
-                ForEach(playlist?.tracks ?? []) { entry in
+                ForEach(visibleEntries) { entry in
                     Button {
-                        if let index = playlist?.tracks.firstIndex(where: { $0.id == entry.id }) {
+                        if let index = visibleEntries.firstIndex(where: { $0.id == entry.id }) {
                             playerStore.play(tracks: queue, startAt: index)
                         }
                     } label: {
@@ -80,8 +102,17 @@ struct PlaylistDetailView: View {
                     .buttonStyle(.plain)
                     .themedRow()
                 }
-                .onDelete(perform: isOwner ? removeTracks : nil)
-                .onMove(perform: isOwner ? moveTracks : nil)
+                // Reordering and deleting index into the full list, so they're
+                // only offered when the full list is what's on screen.
+                .onDelete(perform: isOwner && !favoritesOnly ? removeTracks : nil)
+                .onMove(perform: isOwner && !favoritesOnly ? moveTracks : nil)
+
+                if visibleEntries.isEmpty && !loadState.isLoading {
+                    Text(favoritesOnly ? "No favorited tracks in this playlist." : "This playlist is empty.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.appTextTertiary)
+                        .themedRow()
+                }
             }
 
             if let errorMessage = loadState.errorMessage {
@@ -113,6 +144,13 @@ struct PlaylistDetailView: View {
                             showRadioTokens = true
                         } label: {
                             Label("Radio URL", systemImage: "dot.radiowaves.left.and.right")
+                        }
+                        if isAdmin {
+                            Button {
+                                showSync = true
+                            } label: {
+                                Label("Auto-sync", systemImage: "arrow.triangle.2.circlepath")
+                            }
                         }
                         Button(role: .destructive) {
                             showDeleteConfirm = true
@@ -156,6 +194,9 @@ struct PlaylistDetailView: View {
         }
         .sheet(isPresented: $showRadioTokens) {
             RadioTokensView(playlistId: playlistId)
+        }
+        .sheet(isPresented: $showSync) {
+            PlaylistSyncView(playlistId: playlistId) { await load() }
         }
         .confirmationDialog("Delete this playlist?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
