@@ -6,8 +6,7 @@ struct PlaylistListView: View {
 
     @State private var myPlaylists: [Playlist] = []
     @State private var publicPlaylists: [Playlist] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<(mine: [Playlist], publicOnes: [Playlist])>()
     @State private var showCreate = false
 
     var body: some View {
@@ -20,7 +19,7 @@ struct PlaylistListView: View {
                         }
                         .themedRow()
                     }
-                    if myPlaylists.isEmpty && !isLoading {
+                    if myPlaylists.isEmpty && !loadState.isLoading {
                         Text("You have not created any playlists yet.")
                             .font(.subheadline)
                             .foregroundStyle(Color.appTextTertiary)
@@ -43,7 +42,7 @@ struct PlaylistListView: View {
                     }
                 }
 
-                if let errorMessage {
+                if let errorMessage = loadState.errorMessage {
                     ErrorBanner(message: errorMessage)
                         .themedRow()
                 }
@@ -65,7 +64,7 @@ struct PlaylistListView: View {
                 }
             }
             .overlay {
-                if isLoading && myPlaylists.isEmpty && publicPlaylists.isEmpty {
+                if loadState.isLoading && myPlaylists.isEmpty && publicPlaylists.isEmpty {
                     ProgressView().tint(Color.appAccent)
                 }
             }
@@ -85,17 +84,14 @@ struct PlaylistListView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
+        let result = await loadState.run {
             async let mine = appEnvironment.apiClient.fetchMyPlaylists()
             async let pub = appEnvironment.apiClient.fetchPublicPlaylists()
-            myPlaylists = try await mine
-            publicPlaylists = try await pub
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            return (mine: try await mine, publicOnes: try await pub)
         }
+        guard let result else { return }
+        myPlaylists = result.mine
+        publicPlaylists = result.publicOnes
     }
 }
 

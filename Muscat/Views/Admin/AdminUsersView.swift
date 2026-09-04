@@ -10,8 +10,7 @@ struct AdminUsersView: View {
     @Environment(AppEnvironment.self) private var appEnvironment
 
     @State private var users: [AdminUser] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<[AdminUser]>()
     @State private var isGeneratingInvite = false
     @State private var generatedInvite: String?
 
@@ -91,7 +90,7 @@ struct AdminUsersView: View {
                     .kerning(0.8)
             }
 
-            if let errorMessage {
+            if let errorMessage = loadState.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -101,7 +100,7 @@ struct AdminUsersView: View {
         .themedList()
         .navigationTitle("User Management")
         .overlay {
-            if isLoading && users.isEmpty {
+            if loadState.isLoading && users.isEmpty {
                 ProgressView().tint(Color.appAccent)
             }
         }
@@ -119,24 +118,18 @@ struct AdminUsersView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            users = try await appEnvironment.apiClient.fetchAdminUsers()
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchAdminUsers() }) {
+            users = result
         }
     }
 
     private func generateInvite() async {
         isGeneratingInvite = true
-        errorMessage = nil
         defer { isGeneratingInvite = false }
         do {
             generatedInvite = try await appEnvironment.apiClient.createInvite()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

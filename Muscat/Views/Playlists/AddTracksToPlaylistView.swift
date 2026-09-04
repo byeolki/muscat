@@ -10,9 +10,8 @@ struct AddTracksToPlaylistView: View {
 
     @State private var tracks: [Track] = []
     @State private var selectedIds: Set<String> = []
-    @State private var isLoading = false
+    @State private var loadState = LoadableState<[Track]>()
     @State private var isSaving = false
-    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -65,9 +64,9 @@ struct AddTracksToPlaylistView: View {
                 }
             }
             .overlay {
-                if isLoading {
+                if loadState.isLoading {
                     ProgressView().tint(Color.appAccent)
-                } else if let errorMessage {
+                } else if let errorMessage = loadState.errorMessage {
                     EmptyStateView(systemImage: "exclamationmark.circle", message: errorMessage)
                 }
             }
@@ -84,26 +83,20 @@ struct AddTracksToPlaylistView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            tracks = try await appEnvironment.apiClient.fetchTracks()
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchTracks() }) {
+            tracks = result
         }
     }
 
     private func addSelected() async {
         isSaving = true
-        errorMessage = nil
         defer { isSaving = false }
         do {
             try await appEnvironment.apiClient.addTracks(playlistId: playlistId, trackIds: Array(selectedIds))
             await onAdded()
             dismiss()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

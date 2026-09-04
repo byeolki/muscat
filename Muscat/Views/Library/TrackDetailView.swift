@@ -16,8 +16,7 @@ struct TrackDetailView: View {
     @State private var detail: TrackDetail?
     @State private var lyricsOptions: [LyricsResponse] = []
     @State private var selectedLyricsLanguage: String?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<TrackDetail>()
     @State private var isFavorited = false
     @State private var showVideo = false
     @State private var showEdit = false
@@ -140,7 +139,7 @@ struct TrackDetailView: View {
                     .padding(.horizontal, 24)
                 }
 
-                if let errorMessage {
+                if let errorMessage = loadState.errorMessage {
                     ErrorBanner(message: errorMessage)
                         .padding(.horizontal, 24)
                 }
@@ -193,25 +192,20 @@ struct TrackDetailView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            async let detailResult = appEnvironment.apiClient.fetchTrack(id: trackId)
-            async let lyricsResult = appEnvironment.apiClient.fetchLyrics(trackId: trackId)
-            detail = try await detailResult
-            lyricsOptions = (try? await lyricsResult) ?? []
-            selectedLyricsLanguage = nil
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
-        }
+        // Lyrics are optional garnish — a track with none still renders, so only the
+        // detail fetch is allowed to fail the screen.
+        async let lyricsResult = appEnvironment.apiClient.fetchLyrics(trackId: trackId)
+        let result = await loadState.run { try await appEnvironment.apiClient.fetchTrack(id: trackId) }
+        lyricsOptions = (try? await lyricsResult) ?? []
+        selectedLyricsLanguage = nil
+        if let result { detail = result }
     }
 
     private func toggleFavorite() async {
         do {
             isFavorited = try await appEnvironment.apiClient.toggleFavorite(trackId: trackId)
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

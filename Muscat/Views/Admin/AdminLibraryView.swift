@@ -7,8 +7,7 @@ struct AdminLibraryView: View {
     @State private var roots: [LibraryRoot] = []
     @State private var scanJobs: [ScanJob] = []
     @State private var newRootPath = ""
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<(roots: [LibraryRoot], jobs: [ScanJob])>()
 
     var body: some View {
         List {
@@ -72,7 +71,7 @@ struct AdminLibraryView: View {
                         }
                     }
                 }
-                if roots.isEmpty && !isLoading {
+                if roots.isEmpty && !loadState.isLoading {
                     Text("No library roots configured.")
                         .font(.subheadline)
                         .foregroundStyle(Color.appTextTertiary)
@@ -105,7 +104,7 @@ struct AdminLibraryView: View {
                     .padding(.vertical, 2)
                     .themedRow()
                 }
-                if scanJobs.isEmpty && !isLoading {
+                if scanJobs.isEmpty && !loadState.isLoading {
                     Text("No scan history yet.")
                         .font(.subheadline)
                         .foregroundStyle(Color.appTextTertiary)
@@ -115,7 +114,7 @@ struct AdminLibraryView: View {
                 sectionHeader("Recent Scans")
             }
 
-            if let errorMessage {
+            if let errorMessage = loadState.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -150,27 +149,24 @@ struct AdminLibraryView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
+        let result = await loadState.run {
             async let rootsResult = appEnvironment.apiClient.fetchLibraryRoots()
             async let jobsResult = appEnvironment.apiClient.fetchScanJobs()
-            roots = try await rootsResult
-            scanJobs = Array(try await jobsResult.reversed())
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            // The server orders scan jobs oldest-first; show the most recent on top.
+            return (roots: try await rootsResult, jobs: Array(try await jobsResult.reversed()))
         }
+        guard let result else { return }
+        roots = result.roots
+        scanJobs = result.jobs
     }
 
     private func addRoot() async {
-        errorMessage = nil
         do {
             _ = try await appEnvironment.apiClient.addLibraryRoot(path: newRootPath)
             newRootPath = ""
             await load()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 
@@ -179,17 +175,16 @@ struct AdminLibraryView: View {
             try await appEnvironment.apiClient.deleteLibraryRoot(id: root.id)
             roots.removeAll { $0.id == root.id }
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 
     private func triggerScan(rootId: String) async {
-        errorMessage = nil
         do {
             try await appEnvironment.apiClient.triggerLibraryScan(rootId: rootId)
             await load()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

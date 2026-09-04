@@ -2,8 +2,6 @@
 
 Native iOS/macOS client for [Podo](https://github.com/byeolki/podo), a self-hosted music streaming server. SwiftUI, multiplatform, one codebase.
 
-This was written without a working Xcode/Swift toolchain — **it has never been compiled.** Expect a few build errors on first open; report them and they'll get fixed.
-
 ## Build
 
 ```bash
@@ -14,6 +12,19 @@ open Muscat.xcodeproj
 ```
 
 Set a signing Team on each target (`Muscat-iOS`, `Muscat-macOS`, `MuscatWidgetsExtension`) in Signing & Capabilities, then run the `Muscat-iOS` or `Muscat-macOS` scheme. Re-run `xcodegen generate` after any change to `project.yml` or the source folders — the `.xcodeproj` is a generated artifact and isn't committed.
+
+To check a change without opening Xcode:
+
+```bash
+# MuscatKit on its own (fast; also runs the unit tests)
+cd Packages/MuscatKit && swift build && swift test
+
+# whole app, no signing required
+xcodebuild -project Muscat.xcodeproj -scheme Muscat-macOS \
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project Muscat.xcodeproj -scheme Muscat-iOS \
+  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+```
 
 ## Targets
 
@@ -36,10 +47,21 @@ Packages/MuscatKit/  local Swift package — networking, auth, player, models
 ## Architecture
 
 - **APIClient** (`MuscatKit/Networking`) — actor-isolated, snake_case JSON throughout to match the server. A 401 triggers a single coalesced refresh (concurrent requests share one in-flight refresh call) and one retry per request; refresh failure clears the session and signals the app to log out.
+- **TrackDisplayable** (`MuscatKit/Models`) — the server returns five different track shapes (library list, detail, favorites, playlist entries, album entries) because each endpoint wraps and enriches the row differently. They all conform to this protocol, so artist/duration/artwork resolution — and the single `TrackRowContent` list row — are written once rather than per shape.
+- **QueueTrack** (`MuscatKit/Player`) — the playback queue deals only in this thin type; any `TrackDisplayable` converts with `QueueTrack(_:)`.
 - **AVPlayer, not AVAudioEngine** — the spec called for `AVAudioEngine` for EQ/crossfade, but it can't consume a network stream directly (buffers/files only). EQ on a live stream needs `MTAudioProcessingTap`, which wasn't worth writing blind. `AVPlayer` handles streaming/decoding now; a tap on `AVPlayerItem` is the extension point for EQ later.
-- **QueueTrack** (`MuscatKit/Player`) — every endpoint that returns tracks uses a different shape (library list, playlist/favorites raw rows with no override resolution, album entries, search hits, radio). The playback queue only deals in this one thin type; each source converts into it via `QueueTrack(_:)`.
 - **Keychain-backed auth** — tokens never touch UserDefaults; only the server URL does (not sensitive).
 - **@Observable stores** (`AuthStore`, `PlayerStore`) injected via `.environment(...)`, consumed with `@Environment(Type.self)`.
+- **LoadableState** (`MuscatKit/UI`) — replaces the hand-rolled `isLoading` + `errorMessage` + `do/catch` trio in views that fetch.
+
+### Artwork resolution
+
+`GET /artwork/:id` resolves whatever id it's given against albums, then playlists,
+then track thumbnails — purely by id. It has no idea an album id was meant to be
+"the" artwork for a track, so an album with no cover file on disk 404s rather than
+falling back. Every track shape therefore exposes both `artworkId` and
+`fallbackArtworkId`, and `RemoteArtworkView` retries with the fallback when the
+first image fails to load.
 
 ## Feature coverage
 
@@ -53,7 +75,9 @@ Packages/MuscatKit/  local Swift package — networking, auth, player, models
 
 ## Known limitations
 
-- Streaming always requests `format=aac` for audio (guarantees a codec `AVPlayer` can decode); video requests no `format` (passthrough only, avoids transcoding).
+- Streaming always requests `format=aac` for audio (guarantees a codec `AVPlayer` can decode), which means the server transcodes even when the original would have played; video requests no `format` (passthrough only).
 - `POST /upload`'s response doesn't include the new `source_id`/`track_id` (server-side gap) — the client re-fetches `GET /upload/files` to resolve them.
 - Live Activity shows text + a progress bar, no artwork (ActivityKit's content-state size limit makes image payloads unreliable), and updates only on play/pause/track-change, not every second.
+- Search results play as a single-track queue with no artwork or duration — the search endpoint returns hits, not full track rows.
 - Admin screens cover users/invites/storage/library scan only — no download (yt-dlp), duplicate-group review, or mapping-queue UI.
+- Test coverage is limited to `MuscatKit`'s JSON coding; the views have none.

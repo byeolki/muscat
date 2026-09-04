@@ -5,8 +5,7 @@ struct AdminStorageView: View {
     @Environment(AppEnvironment.self) private var appEnvironment
 
     @State private var stats: StorageStats?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<StorageStats>()
 
     private let byteFormatter: ByteCountFormatter = {
         let formatter = ByteCountFormatter()
@@ -67,7 +66,7 @@ struct AdminStorageView: View {
                         .kerning(0.8)
                 }
             }
-            if let errorMessage {
+            if let errorMessage = loadState.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -77,7 +76,7 @@ struct AdminStorageView: View {
         .themedList()
         .navigationTitle("Storage Usage")
         .overlay {
-            if isLoading && stats == nil {
+            if loadState.isLoading && stats == nil {
                 ProgressView().tint(Color.appAccent)
             }
         }
@@ -112,13 +111,8 @@ struct AdminStorageView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            stats = try await appEnvironment.apiClient.fetchStorageStats()
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchStorageStats() }) {
+            stats = result
         }
     }
 }

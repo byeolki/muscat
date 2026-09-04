@@ -10,9 +10,8 @@ struct RadioTokensView: View {
     let playlistId: String
 
     @State private var tokens: [RadioToken] = []
-    @State private var isLoading = false
+    @State private var loadState = LoadableState<[RadioToken]>()
     @State private var isCreating = false
-    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -61,7 +60,7 @@ struct RadioTokensView: View {
                             }
                         }
                     }
-                    if tokens.isEmpty && !isLoading {
+                    if tokens.isEmpty && !loadState.isLoading {
                         Text("No radio URLs issued yet.")
                             .font(.subheadline)
                             .foregroundStyle(Color.appTextTertiary)
@@ -74,7 +73,7 @@ struct RadioTokensView: View {
                         .kerning(0.8)
                 }
 
-                if let errorMessage {
+                if let errorMessage = loadState.errorMessage {
                     ErrorBanner(message: errorMessage)
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
@@ -105,25 +104,19 @@ struct RadioTokensView: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            tokens = try await appEnvironment.apiClient.fetchRadioTokens(playlistId: playlistId)
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchRadioTokens(playlistId: playlistId) }) {
+            tokens = result
         }
     }
 
     private func createToken() async {
         isCreating = true
-        errorMessage = nil
         defer { isCreating = false }
         do {
             _ = try await appEnvironment.apiClient.createRadioToken(playlistId: playlistId)
             await load()
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 
@@ -132,7 +125,7 @@ struct RadioTokensView: View {
             try await appEnvironment.apiClient.deleteRadioToken(playlistId: playlistId, tokenId: token.id)
             tokens.removeAll { $0.id == token.id }
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }
