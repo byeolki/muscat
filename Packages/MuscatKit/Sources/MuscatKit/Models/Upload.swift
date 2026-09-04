@@ -10,6 +10,8 @@ public struct UploadedFileEntry: Codable, Hashable, Identifiable {
     public let fileSize: Int?
     public let addedAt: Date?
     public let addedByName: String?
+    /// Canonical URL a yt-dlp download came from; `nil` for hand-uploaded files.
+    public let sourceUrl: String?
 
     public var id: String { sourceId }
 }

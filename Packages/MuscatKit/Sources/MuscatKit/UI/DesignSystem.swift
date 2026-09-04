@@ -181,6 +181,36 @@ public struct ErrorBanner: View {
     }
 }
 
+// MARK: - Formatting
+
+/// `mm:ss` for a duration in seconds. Lives here (rather than on a row view) so
+/// list rows, the album sheet and Now Playing all render time identically.
+public func formattedDuration(_ seconds: Double) -> String {
+    let total = Int(seconds.rounded())
+    return String(format: "%d:%02d", total / 60, total % 60)
+}
+
+// MARK: - Badges
+
+/// Small uppercase chip used for inline markers (ADMIN, etc).
+public struct BadgeLabel: View {
+    public let text: String
+
+    public init(text: String) {
+        self.text = text
+    }
+
+    public var body: some View {
+        Text(text)
+            .font(.system(size: 9, weight: .bold))
+            .kerning(0.5)
+            .foregroundStyle(Color.appAccent)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(Color.appAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+}
+
 // MARK: - Artist / cover line
 
 /// Renders "Artist Name" or, for covers, "Artist Name · cover of Original Artist" with

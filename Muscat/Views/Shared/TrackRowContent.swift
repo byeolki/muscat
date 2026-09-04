@@ -1,11 +1,12 @@
 import MuscatKit
 import SwiftUI
 
-/// Shared row layout for both enriched (`Track`) and raw (`RawTrack`/`PlaylistTrackEntry`)
-/// track shapes: artwork, title, artist line, and trailing badges/duration.
-/// `TrackRowView` and `RawTrackRowView` are thin wrappers that each pass what their
-/// underlying model actually has — raw shapes have no `artists` array or
-/// favorite/video flags, so those simply default to absent.
+/// The one list row for every track-shaped response: artwork, title, artist line,
+/// and trailing video/favorite badges plus duration.
+///
+/// `TrackRowDisplayable` is what makes this single view work across the library
+/// list, favorites and playlist entries — those endpoints wrap the row
+/// differently but carry the same displayable fields.
 struct TrackRowContent: View {
     let title: String
     let artist: String
@@ -17,6 +18,20 @@ struct TrackRowContent: View {
     let hasVideo: Bool
     let isFavorited: Bool
 
+    init(track: some TrackRowDisplayable) {
+        title = track.title
+        artist = track.displayArtist
+        artworkId = track.artworkId
+        fallbackArtworkId = track.fallbackArtworkId
+        isCover = track.isCover
+        originalArtist = track.originalArtist
+        duration = track.durationSeconds
+        hasVideo = track.hasVideo
+        isFavorited = track.isFavorited
+    }
+
+    /// For shapes that aren't full row models — e.g. `AlbumTrackEntry`, which the
+    /// album endpoint returns without favorite/video state.
     init(
         title: String,
         artist: String,
@@ -72,7 +87,7 @@ struct TrackRowContent: View {
                         .foregroundStyle(Color.appAccent)
                 }
                 if let duration {
-                    Text(TrackRowView.formatted(duration))
+                    Text(formattedDuration(duration))
                         .font(.caption)
                         .foregroundStyle(Color.appTextTertiary)
                         .monospacedDigit()

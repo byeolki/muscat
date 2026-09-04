@@ -21,7 +21,7 @@ struct FavoritesListView: View {
                         Button {
                             playerStore.play(tracks: queue, startAt: index)
                         } label: {
-                            RawTrackRowView(track: entry.track)
+                            TrackRowContent(track: entry.track)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
                         }

@@ -9,8 +9,7 @@ struct AlbumTracksSheet: View {
     let albumId: String
 
     @State private var album: AlbumDetail?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @State private var loadState = LoadableState<AlbumDetail>()
 
     var body: some View {
         NavigationStack {
@@ -25,27 +24,16 @@ struct AlbumTracksSheet: View {
                                         startAt: index
                                     )
                                 } label: {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 3) {
-                                            Text(track.title)
-                                                .font(.subheadline.weight(.medium))
-                                                .foregroundStyle(Color.appTextPrimary)
-                                            artistLineText(
-                                                artist: track.displayArtist,
-                                                isCover: track.isCover,
-                                                originalArtist: nil
-                                            )
-                                            .font(.caption)
-                                        }
-                                        Spacer()
-                                        if let duration = track.durationSeconds {
-                                            Text(TrackRowView.formatted(duration))
-                                                .font(.caption)
-                                                .foregroundStyle(Color.appTextTertiary)
-                                                .monospacedDigit()
-                                        }
-                                    }
-                                    .contentShape(Rectangle())
+                                    // `AlbumTrackEntry` has no favorite/video state, so
+                                    // those badges are simply absent here.
+                                    TrackRowContent(
+                                        title: track.title,
+                                        artist: track.displayArtist,
+                                        artworkId: track.artworkId,
+                                        fallbackArtworkId: track.fallbackArtworkId,
+                                        isCover: track.isCover,
+                                        duration: track.durationSeconds
+                                    )
                                 }
                                 .buttonStyle(.plain)
                                 .themedRow()
@@ -73,9 +61,9 @@ struct AlbumTracksSheet: View {
                 }
             }
             .overlay {
-                if isLoading {
+                if loadState.isLoading {
                     ProgressView().tint(Color.appAccent)
-                } else if let errorMessage {
+                } else if let errorMessage = loadState.errorMessage {
                     EmptyStateView(systemImage: "exclamationmark.circle", message: errorMessage)
                 }
             }
@@ -91,13 +79,8 @@ struct AlbumTracksSheet: View {
     }
 
     private func load() async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-        do {
-            album = try await appEnvironment.apiClient.fetchAlbum(id: albumId)
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+        if let result = await loadState.run({ try await appEnvironment.apiClient.fetchAlbum(id: albumId) }) {
+            album = result
         }
     }
 }

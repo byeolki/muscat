@@ -124,9 +124,9 @@ struct NowPlayingView: View {
             .tint(Color.appAccent)
 
             HStack {
-                Text(TrackRowView.formatted(scrubPosition ?? playerStore.currentSeconds))
+                Text(formattedDuration(scrubPosition ?? playerStore.currentSeconds))
                 Spacer()
-                Text(TrackRowView.formatted(playerStore.duration ?? 0))
+                Text(formattedDuration(playerStore.duration ?? 0))
             }
             .font(.caption)
             .foregroundStyle(Color.appTextTertiary)

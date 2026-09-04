@@ -19,7 +19,7 @@ struct TrackListView: View {
                         Button {
                             playerStore.play(tracks: tracks.map { QueueTrack($0) }, startAt: index)
                         } label: {
-                            TrackRowView(track: track)
+                            TrackRowContent(track: track)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
                         }

@@ -9,9 +9,8 @@ struct RadioView: View {
 
     @State private var seedArtistName = ""
     @State private var stationTracks: [Track] = []
-    @State private var isLoading = false
+    @State private var loadState = LoadableState<[Track]>()
     @State private var isSaving = false
-    @State private var errorMessage: String?
     @State private var savedMixMessage: String?
 
     var body: some View {
@@ -23,7 +22,7 @@ struct RadioView: View {
                     Button {
                         Task { await startStation() }
                     } label: {
-                        if isLoading {
+                        if loadState.isLoading {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         } else {
@@ -32,7 +31,7 @@ struct RadioView: View {
                         }
                     }
                     .buttonStyle(AccentButtonStyle(fullWidth: true))
-                    .disabled(isLoading)
+                    .disabled(loadState.isLoading)
                 }
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
@@ -72,7 +71,7 @@ struct RadioView: View {
                         Button {
                             playerStore.play(tracks: stationTracks.map { QueueTrack($0) }, startAt: index)
                         } label: {
-                            TrackRowView(track: track)
+                            TrackRowContent(track: track)
                         }
                         .buttonStyle(.plain)
                         .themedRow()
@@ -99,7 +98,7 @@ struct RadioView: View {
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
             }
-            if let errorMessage {
+            if let errorMessage = loadState.errorMessage {
                 ErrorBanner(message: errorMessage)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -111,32 +110,37 @@ struct RadioView: View {
     }
 
     private func startStation() async {
-        isLoading = true
-        errorMessage = nil
         savedMixMessage = nil
-        defer { isLoading = false }
         let trimmed = seedArtistName.trimmingCharacters(in: .whitespacesAndNewlines)
-        do {
-            stationTracks = try await appEnvironment.apiClient.fetchRadioStation(
+        let result = await loadState.run {
+            try await appEnvironment.apiClient.fetchRadioStation(
                 seedArtistName: trimmed.isEmpty ? nil : trimmed
             )
-        } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
         }
+        if let result { stationTracks = result }
     }
 
+    /// Saves the station currently on screen rather than calling `POST /radio/mix`,
+    /// which re-runs the seed and returns a freshly randomised selection — the saved
+    /// playlist would not have matched what the user just listened to.
     private func saveMix() async {
         isSaving = true
-        errorMessage = nil
         defer { isSaving = false }
         let trimmed = seedArtistName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = trimmed.isEmpty
+            ? "Mix · \(Date().formatted(date: .abbreviated, time: .omitted))"
+            : "\(trimmed) Radio"
         do {
-            let playlist = try await appEnvironment.apiClient.createRadioMix(
-                seedArtistName: trimmed.isEmpty ? nil : trimmed
+            let playlist = try await appEnvironment.apiClient.createPlaylist(
+                name: name,
+                description: trimmed.isEmpty ? "Auto-generated mix" : "Radio station seeded from \(trimmed)"
+            )
+            try await appEnvironment.apiClient.addTracks(
+                playlistId: playlist.id, trackIds: stationTracks.map(\.id)
             )
             savedMixMessage = "Saved as playlist \"\(playlist.name)\"."
         } catch {
-            errorMessage = (error as? APIClientError)?.errorDescription ?? error.localizedDescription
+            loadState.fail(error)
         }
     }
 }

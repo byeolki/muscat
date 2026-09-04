@@ -84,7 +84,7 @@ public struct Source: Codable, Hashable, Identifiable {
 
 /// `GET /tracks` list item shape. Note the top-level `artist` is the RAW column
 /// (not override-resolved) — use `displayArtist` or the `artists` array for display.
-public struct Track: Codable, Hashable, Identifiable {
+public struct Track: Codable, Hashable, Identifiable, TrackRowDisplayable {
     public let id: String
     public let title: String
     public let artist: String?
@@ -106,40 +106,14 @@ public struct Track: Codable, Hashable, Identifiable {
     public let favoriteCount: Int
     public let isFavorited: Bool
 
-    /// Comma-joined, override-resolved artist names — safe for display.
-    public var displayArtist: String {
-        artists.map(\.name).joined(separator: ", ")
-    }
-
-    /// `duration`/`canonical_duration` are stored server-side in milliseconds
-    /// (`ffprobe.service.ts` rounds `parseFloat(duration) * 1000`); convert to seconds
-    /// for playback/display.
-    public var durationSeconds: Double? {
-        duration.map { $0 / 1000 }
-    }
-
-    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
-    /// id when it has a generated thumbnail (server resolves `thumbnail_path` for a
-    /// track id the same way it resolves album/playlist artwork).
-    public var artworkId: String? {
-        albumVersionId ?? (thumbnailPath != nil ? id : nil)
-    }
-
-    /// The server checks `artworkId` against albums, then playlists, then track
-    /// thumbnails, purely by id — it has no idea `albumVersionId` was meant to be "the"
-    /// artwork, so an album with no artwork file on disk 404s instead of falling back.
-    /// This is the client-side fallback for that case: the track's own id, only
-    /// meaningful when it's different from `artworkId` and actually has a thumbnail.
-    public var fallbackArtworkId: String? {
-        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
-        return id
-    }
+    public var durationMilliseconds: Double? { duration }
+    public var originalArtist: String? { override?.originalArtist }
 }
 
 /// `GET /tracks/:id` detail shape. `title`/`is_cover`/`track_number`/`disc_number` are
 /// override-resolved here (unlike the list endpoint). No `favorite_count`/`is_favorited`
 /// alias — carry those over from the originating `Track` if needed for UI state.
-public struct TrackDetail: Codable, Hashable, Identifiable {
+public struct TrackDetail: Codable, Hashable, Identifiable, TrackDisplayable {
     public let id: String
     public let title: String
     public let artist: String?
@@ -160,9 +134,7 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
     public let tags: [Tag]
     public let override: TrackMetadataOverride?
 
-    public var displayArtist: String {
-        artists.map(\.name).joined(separator: ", ")
-    }
+    public var durationMilliseconds: Double? { duration }
 
     /// Mirrors the server's own `has_video` computation (`tracks.service.ts`):
     /// a video `Source` row OR a `video_locator` override, either one is enough. The
@@ -173,31 +145,14 @@ public struct TrackDetail: Codable, Hashable, Identifiable {
         sources.contains { $0.mediaKind == .video } || override?.videoLocator != nil
     }
 
-    /// Best available audio source: prefers higher `priority`, then availability.
+    /// Best available audio source, matching the server's own resolution order:
+    /// `StreamingService.resolveSource` orders by `priority` **ascending**, so a
+    /// lower number wins. Sorting the other way here made the client name a
+    /// different source than the one that would actually be streamed.
     public var preferredAudioSource: Source? {
         sources
             .filter { $0.mediaKind == .audio && $0.available }
-            .sorted { $0.priority > $1.priority }
-            .first
-    }
-
-    /// `duration`/`canonical_duration` are stored server-side in milliseconds; convert
-    /// to seconds for playback/display.
-    public var durationSeconds: Double? {
-        duration.map { $0 / 1000 }
-    }
-
-    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
-    /// id when it has a generated thumbnail.
-    public var artworkId: String? {
-        albumVersionId ?? (thumbnailPath != nil ? id : nil)
-    }
-
-    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk —
-    /// see `Track.fallbackArtworkId` for why this is needed at all.
-    public var fallbackArtworkId: String? {
-        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
-        return id
+            .min { $0.priority < $1.priority }
     }
 }
 

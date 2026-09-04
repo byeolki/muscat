@@ -6,7 +6,7 @@ import Foundation
 /// longer a bare `tracks` row. The name (and the split from `Track`) stuck around
 /// because these two endpoints wrap/shape it slightly differently (`{ track }[]` for
 /// favorites, flat `+ position` for playlists), not because the data is less complete.
-public struct RawTrack: Codable, Hashable, Identifiable {
+public struct RawTrack: Codable, Hashable, Identifiable, TrackRowDisplayable {
     public let id: String
     public let title: String
     public let artist: String?
@@ -26,35 +26,12 @@ public struct RawTrack: Codable, Hashable, Identifiable {
     public let override: TrackMetadataOverride?
     public let isFavorited: Bool
 
-    /// Comma-joined, override-resolved artist names — safe for display.
-    public var displayArtist: String {
-        artists.map(\.name).joined(separator: ", ")
-    }
-
-    /// `canonical_duration` is stored server-side in milliseconds; convert to seconds
-    /// for playback/display.
-    public var durationSeconds: Double? {
-        canonicalDuration.map { $0 / 1000 }
-    }
-
-    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
-    /// id when it has a generated thumbnail.
-    public var artworkId: String? {
-        albumVersionId ?? (thumbnailPath != nil ? id : nil)
-    }
-
-    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk —
-    /// the artwork endpoint checks whatever id it's given against albums, then
-    /// playlists, then track thumbnails, so an album with no art on disk 404s instead
-    /// of silently trying the track's own thumbnail.
-    public var fallbackArtworkId: String? {
-        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
-        return id
-    }
+    public var durationMilliseconds: Double? { canonicalDuration }
+    public var originalArtist: String? { override?.originalArtist }
 }
 
 /// A `RawTrack` plus its position within a playlist (`GET /playlists/:id`).
-public struct PlaylistTrackEntry: Codable, Hashable, Identifiable {
+public struct PlaylistTrackEntry: Codable, Hashable, Identifiable, TrackRowDisplayable {
     public let id: String
     public let title: String
     public let artist: String?
@@ -75,26 +52,6 @@ public struct PlaylistTrackEntry: Codable, Hashable, Identifiable {
     public let isFavorited: Bool
     public let position: Int
 
-    /// Comma-joined, override-resolved artist names — safe for display.
-    public var displayArtist: String {
-        artists.map(\.name).joined(separator: ", ")
-    }
-
-    /// `canonical_duration` is stored server-side in milliseconds; convert to seconds
-    /// for playback/display.
-    public var durationSeconds: Double? {
-        canonicalDuration.map { $0 / 1000 }
-    }
-
-    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
-    /// id when it has a generated thumbnail.
-    public var artworkId: String? {
-        albumVersionId ?? (thumbnailPath != nil ? id : nil)
-    }
-
-    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk.
-    public var fallbackArtworkId: String? {
-        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
-        return id
-    }
+    public var durationMilliseconds: Double? { canonicalDuration }
+    public var originalArtist: String? { override?.originalArtist }
 }

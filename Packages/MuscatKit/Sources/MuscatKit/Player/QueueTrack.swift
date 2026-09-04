@@ -36,40 +36,10 @@ public struct QueueTrack: Identifiable, Hashable {
 }
 
 public extension QueueTrack {
-    init(_ track: Track) {
-        self.init(
-            id: track.id,
-            title: track.title,
-            displayArtist: track.displayArtist,
-            artworkId: track.artworkId,
-            fallbackArtworkId: track.fallbackArtworkId,
-            duration: track.durationSeconds
-        )
-    }
-
-    init(_ track: TrackDetail) {
-        self.init(
-            id: track.id,
-            title: track.title,
-            displayArtist: track.displayArtist,
-            artworkId: track.artworkId,
-            fallbackArtworkId: track.fallbackArtworkId,
-            duration: track.durationSeconds
-        )
-    }
-
-    init(_ track: RawTrack) {
-        self.init(
-            id: track.id,
-            title: track.title,
-            displayArtist: track.displayArtist,
-            artworkId: track.artworkId,
-            fallbackArtworkId: track.fallbackArtworkId,
-            duration: track.durationSeconds
-        )
-    }
-
-    init(_ track: PlaylistTrackEntry) {
+    /// Every track-shaped response converts the same way, so one initializer over
+    /// `TrackDisplayable` covers the library list, detail, favorites, playlist and
+    /// album shapes.
+    init(_ track: some TrackDisplayable) {
         self.init(
             id: track.id,
             title: track.title,

@@ -75,7 +75,7 @@ struct PlaylistDetailView: View {
                             playerStore.play(tracks: queue, startAt: index)
                         }
                     } label: {
-                        RawTrackRowView(entry: entry)
+                        TrackRowContent(track: entry)
                     }
                     .buttonStyle(.plain)
                     .themedRow()

@@ -18,9 +18,10 @@ public enum AlbumVersionType: String, Codable {
     case other
 }
 
-/// `tracks[]` here add `duration`/`artists` on top of the raw columns but do NOT
-/// override-resolve `artist` (unlike `TracksService.findOne`).
-public struct AlbumTrackEntry: Codable, Hashable, Identifiable {
+/// One track inside `GET /albums/:id`. Enriched the same way the library list is
+/// (override-resolved title/artist, split `artists`), but without the per-user
+/// favorite state or the `override` blob the list endpoints carry.
+public struct AlbumTrackEntry: Codable, Hashable, Identifiable, TrackDisplayable {
     public let id: String
     public let title: String
     public let artist: String?
@@ -38,27 +39,7 @@ public struct AlbumTrackEntry: Codable, Hashable, Identifiable {
     public let duration: Double?
     public let artists: [ArtistRef]
 
-    public var displayArtist: String {
-        artists.map(\.name).joined(separator: ", ")
-    }
-
-    /// `duration`/`canonical_duration` are stored server-side in milliseconds; convert
-    /// to seconds for playback/display.
-    public var durationSeconds: Double? {
-        duration.map { $0 / 1000 }
-    }
-
-    /// Best id to pass to `GET /artwork/:id`: album artwork first, else the track's own
-    /// id when it has a generated thumbnail.
-    public var artworkId: String? {
-        albumVersionId ?? (thumbnailPath != nil ? id : nil)
-    }
-
-    /// Fallback if `artworkId` (the album) turns out to have no artwork file on disk.
-    public var fallbackArtworkId: String? {
-        guard albumVersionId != nil, thumbnailPath != nil else { return nil }
-        return id
-    }
+    public var durationMilliseconds: Double? { duration }
 }
 
 public struct AlbumVersion: Codable, Hashable, Identifiable {
@@ -78,17 +59,4 @@ public struct AlbumDetail: Codable, Hashable, Identifiable {
     public let updatedAt: Date
     public let createdAt: Date
     public let versions: [AlbumVersion]
-}
-
-public extension QueueTrack {
-    init(_ track: AlbumTrackEntry) {
-        self.init(
-            id: track.id,
-            title: track.title,
-            displayArtist: track.displayArtist,
-            artworkId: track.artworkId,
-            fallbackArtworkId: track.fallbackArtworkId,
-            duration: track.durationSeconds
-        )
-    }
 }
