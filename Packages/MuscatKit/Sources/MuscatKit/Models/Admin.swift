@@ -26,6 +26,21 @@ public struct StorageStats: Codable, Hashable {
     public let disk: DiskStat
 }
 
+/// `GET /admin/update` — whether the server has a newer release available.
+/// `enabled` is false when the operator set `UPDATE_CHECK_ENABLED=false`, in
+/// which case the server never contacted GitHub at all.
+public struct UpdateStatus: Codable, Hashable {
+    public let current: String
+    public let latest: String?
+    public let updateAvailable: Bool
+    public let releaseUrl: String?
+    public let publishedAt: Date?
+    public let notes: String?
+    public let enabled: Bool
+    public let checkedAt: Date?
+    public let error: String?
+}
+
 public struct InviteResponse: Codable {
     public let inviteToken: String
 }

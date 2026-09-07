@@ -40,7 +40,8 @@ Swift package (`MuscatKit`) that holds everything that isn't a view.
 - **Playlist auto-sync** — link a playlist to one on YouTube/SoundCloud/… and let
   the server top it up (admin only, since it downloads)
 - **Uploads** — send files from Files/iCloud, rename and delete your own
-- **Admin** — invite codes, user list, storage usage, library roots and scans
+- **Admin** — invite codes, user list, storage usage, library roots and scans,
+  and a notice when the server has a newer release available
 - **Music videos** — plays a track's video source when it has one
 - **Loudness** — per-track normalization toggle that reloads the stream in place
 

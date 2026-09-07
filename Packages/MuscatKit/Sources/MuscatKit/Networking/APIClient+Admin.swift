@@ -38,4 +38,11 @@ extension APIClient {
     public func fetchScanJobs() async throws -> [ScanJob] {
         try await send(method: "GET", path: "api/v1/library/scans")
     }
+
+    /// Cached server-side for 12h; `force` re-checks immediately.
+    public func fetchUpdateStatus(force: Bool = false) async throws -> UpdateStatus {
+        force
+            ? try await send(method: "POST", path: "api/v1/admin/update/check")
+            : try await send(method: "GET", path: "api/v1/admin/update")
+    }
 }
