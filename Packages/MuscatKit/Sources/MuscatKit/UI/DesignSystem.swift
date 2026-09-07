@@ -7,8 +7,11 @@ import SwiftUI
 // MARK: - Palette
 
 /// Design tokens for the whole app. Dark-only theme (the app forces
-/// `.preferredColorScheme(.dark)` at the root), lime accent matching the
-/// Podo web dashboard's aesthetic.
+/// `.preferredColorScheme(.dark)` at the root).
+///
+/// The accent is Shine Muscat green because the app is called Muscat. Podo (the
+/// server, and 포도 = grape) is the purple one — sibling apps with their own
+/// identities, deliberately not a shared palette.
 public extension Color {
     init(hex: UInt32) {
         self.init(
@@ -214,8 +217,8 @@ public struct BadgeLabel: View {
 // MARK: - Artist / cover line
 
 /// Renders "Artist Name" or, for covers, "Artist Name · cover of Original Artist" with
-/// "cover" highlighted in the accent color — matches the Podo web dashboard's track row
-/// style. `originalArtist` is only available where the model carries override data
+/// "cover" highlighted in the accent color — the same row wording the Podo web
+/// dashboard uses. `originalArtist` is only available where the model carries override data
 /// (`Track`, `TrackDetail`); pass `nil` elsewhere to fall back to a plain "· cover" tag.
 public func artistLineText(
     artist: String,
