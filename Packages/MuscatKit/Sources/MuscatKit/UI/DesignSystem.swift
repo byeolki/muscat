@@ -244,7 +244,13 @@ public struct ErrorBanner: View {
 
 /// `mm:ss` for a duration in seconds. Lives here (rather than on a row view) so
 /// list rows, the album sheet and Now Playing all render time identically.
+///
+/// Non-finite input is a real case, not defensive padding: `AVPlayer` reports an
+/// indefinite `CMTime` before an item is ready, which arrives here as `NaN`, and
+/// `Int(Double.nan)` is a trap — it would take the app down rather than briefly
+/// showing a wrong time.
 public func formattedDuration(_ seconds: Double) -> String {
+    guard seconds.isFinite, seconds >= 0 else { return "0:00" }
     let total = Int(seconds.rounded())
     return String(format: "%d:%02d", total / 60, total % 60)
 }

@@ -27,9 +27,11 @@ public struct ScrubBar: View {
         self.onEditingChanged = onEditingChanged
     }
 
+    /// `NaN` reaches here whenever the player has an item but no duration yet,
+    /// and a `NaN` width silently breaks the whole layout pass.
     private var fraction: Double {
         let span = range.upperBound - range.lowerBound
-        guard span > 0 else { return 0 }
+        guard span > 0, value.isFinite else { return 0 }
         return min(max((value - range.lowerBound) / span, 0), 1)
     }
 

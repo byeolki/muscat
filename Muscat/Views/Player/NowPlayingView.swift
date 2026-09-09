@@ -180,7 +180,7 @@ struct NowPlayingView: View {
                     get: { scrubPosition ?? playerStore.currentSeconds },
                     set: { scrubPosition = $0 }
                 ),
-                in: 0...(max(playerStore.duration ?? 1, 1)),
+                in: 0...scrubUpperBound,
                 onEditingChanged: { editing in
                     isScrubbing = editing
                     if !editing, let scrubPosition {
@@ -322,6 +322,13 @@ struct NowPlayingView: View {
             let minutes = max(0, Int((deadline.timeIntervalSince(now) / 60).rounded(.up)))
             return "\(minutes)m"
         }
+    }
+
+    /// `Swift.max` doesn't reliably reject a `NaN` operand, and a range whose
+    /// upper bound is `NaN` is not a valid range at all.
+    private var scrubUpperBound: Double {
+        guard let duration = playerStore.duration, duration.isFinite, duration > 0 else { return 1 }
+        return duration
     }
 
     private var canGoBack: Bool {
