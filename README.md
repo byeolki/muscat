@@ -27,6 +27,23 @@ the Dynamic Island, and artwork on the lock screen.
 The whole thing is one SwiftUI target compiled for both platforms, plus a local
 Swift package (`MuscatKit`) that holds everything that isn't a view.
 
+## What it looks like
+
+<table>
+  <tr>
+    <td width="25%"><img src="docs/screenshots/library.png" alt="The library list" /></td>
+    <td width="25%"><img src="docs/screenshots/nowplaying.png" alt="The Now Playing screen" /></td>
+    <td width="25%"><img src="docs/screenshots/playlist.png" alt="A playlist" /></td>
+    <td width="25%"><img src="docs/screenshots/sleeptimer.png" alt="The sleep timer menu" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Library — covers marked as covers, the playing row lit up</em></td>
+    <td align="center"><em>Now Playing</em></td>
+    <td align="center"><em>A playlist, public with a radio URL</em></td>
+    <td align="center"><em>Sleep timer</em></td>
+  </tr>
+</table>
+
 ## What's in it
 
 - **Playback** — queue, repeat off/all/one, per-track scrubbing, background audio,

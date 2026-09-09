@@ -81,10 +81,19 @@ struct MiniPlayerBar: View {
                 .padding(.horizontal, 14)
                 .padding(.bottom, 8)
             }
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+            // Material alone renders as a pale grey slab against this app's
+            // near-black, which read as washed out rather than as glass. The dark
+            // tint over it keeps the blur while putting the bar back in the same
+            // tonal range as everything else on screen.
+            .background {
+                let shape = RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                shape
+                    .fill(.ultraThinMaterial)
+                    .overlay { shape.fill(Color.black.opacity(0.34)) }
+            }
             .overlay(
                 RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.10), lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
             .contentShape(Rectangle())
