@@ -400,7 +400,7 @@ private struct SleepTimerSheet: View {
         }
         .frame(maxWidth: .infinity)
         .themedScreen()
-        .presentationDetents([.height(current.isActive ? 500 : 440)])
+        .presentationDetents([.height(current.isActive ? 432 : 360)])
         #if os(iOS)
         .presentationBackground(Color.appBackground)
         #endif
