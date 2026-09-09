@@ -27,16 +27,7 @@ struct FavoritesListView: View {
                         }
                         .buttonStyle(.plain)
 
-                        Button {
-                            detailTrackId = entry.track.id
-                        } label: {
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(Color.appTextTertiary)
-                                .padding(.vertical, 12)
-                                .padding(.leading, 6)
-                        }
-                        .buttonStyle(.plain)
+                        DetailDisclosureButton { detailTrackId = entry.track.id }
                     }
                     .themedRow()
                     .contextMenu {

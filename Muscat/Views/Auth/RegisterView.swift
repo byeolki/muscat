@@ -20,22 +20,22 @@ struct RegisterView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 12) {
                         fieldLabel("Account")
-                        TextField("", text: $name, prompt: Text("Name").foregroundStyle(Color.appTextTertiary))
+                        TextField("", text: $name, prompt: fieldPrompt("Name"))
                             .themedField()
-                        TextField("", text: $email, prompt: Text("Email").foregroundStyle(Color.appTextTertiary))
+                        TextField("", text: $email, prompt: fieldPrompt("Email"))
                             #if os(iOS)
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)
                             #endif
                             .autocorrectionDisabled()
                             .themedField()
-                        SecureField("", text: $password, prompt: Text("Password").foregroundStyle(Color.appTextTertiary))
+                        SecureField("", text: $password, prompt: fieldPrompt("Password"))
                             .themedField()
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
                         fieldLabel("Invite code")
-                        TextField("", text: $inviteToken, prompt: Text("Code from your admin").foregroundStyle(Color.appTextTertiary))
+                        TextField("", text: $inviteToken, prompt: fieldPrompt("Code from your admin"))
                             .autocorrectionDisabled()
                             .themedField()
                         Text("Registration is invite-only. Ask your server admin for a code.")
@@ -66,7 +66,6 @@ struct RegisterView: View {
                     }
                     .buttonStyle(AccentButtonStyle(fullWidth: true))
                     .disabled(!canSubmit)
-                    .opacity(canSubmit ? 1 : 0.5)
                 }
                 .padding(24)
                 .frame(maxWidth: 480)

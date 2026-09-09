@@ -108,8 +108,15 @@ struct RemoteArtworkView: View {
             .clipped()
     }
 
+    /// Sized from the tile rather than the ambient font: the same view backs a
+    /// 40pt mini-player thumbnail and a full-width Now Playing cover, and an
+    /// inherited `.caption` left the note as a speck in the middle of the big one.
     private var placeholderIcon: some View {
-        Image(systemName: "music.note")
-            .foregroundStyle(Color.appTextTertiary)
+        GeometryReader { geometry in
+            Image(systemName: "music.note")
+                .font(.system(size: min(geometry.size.width, geometry.size.height) * 0.36, weight: .medium))
+                .foregroundStyle(Color.appTextTertiary)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+        }
     }
 }

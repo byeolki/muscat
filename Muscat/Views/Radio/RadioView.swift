@@ -17,7 +17,7 @@ struct RadioView: View {
         List {
             Section {
                 VStack(spacing: 12) {
-                    TextField("", text: $seedArtistName, prompt: Text("Artist name (blank = whole library)").foregroundStyle(Color.appTextTertiary))
+                    TextField("", text: $seedArtistName, prompt: fieldPrompt("Artist name (blank = whole library)"))
                         .themedField()
                     Button {
                         Task { await startStation() }

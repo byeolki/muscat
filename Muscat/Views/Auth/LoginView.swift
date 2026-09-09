@@ -48,7 +48,7 @@ struct LoginView: View {
             .padding(.bottom, 36)
 
             VStack(spacing: 14) {
-                TextField("", text: $email, prompt: Text("Email").foregroundStyle(Color.appTextTertiary))
+                TextField("", text: $email, prompt: fieldPrompt("Email"))
                     #if os(iOS)
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
@@ -57,7 +57,7 @@ struct LoginView: View {
                     .autocorrectionDisabled()
                     .themedField()
 
-                SecureField("", text: $password, prompt: Text("Password").foregroundStyle(Color.appTextTertiary))
+                SecureField("", text: $password, prompt: fieldPrompt("Password"))
                     #if os(iOS)
                     .textContentType(.password)
                     #endif
@@ -78,7 +78,6 @@ struct LoginView: View {
                 }
                 .buttonStyle(AccentButtonStyle(fullWidth: true))
                 .disabled(!canSubmit)
-                .opacity(canSubmit ? 1 : 0.5)
 
                 Button {
                     showRegister = true

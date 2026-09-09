@@ -86,6 +86,7 @@ struct SearchView: View {
                                     Image(systemName: "chevron.right")
                                         .font(.caption2)
                                         .foregroundStyle(Color.appTextTertiary)
+                                        .accessibilityHidden(true)
                                 }
                                 .contentShape(Rectangle())
                             }

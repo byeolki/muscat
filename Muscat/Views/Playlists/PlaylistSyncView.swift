@@ -38,25 +38,25 @@ struct PlaylistSyncView: View {
                 Section {
                     TextField(
                         "", text: $sourceURL,
-                        prompt: Text("https://youtube.com/playlist?list=…").foregroundStyle(Color.appTextTertiary)
+                        prompt: fieldPrompt("youtube.com/playlist?list=…")
                     )
                     #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     #endif
                     .autocorrectionDisabled()
-                    .themedRow()
+                    .themedCardRow()
 
                     Picker("Check for new items", selection: $intervalMinutes) {
                         ForEach(Self.intervals, id: \.minutes) { option in
                             Text(option.label).tag(option.minutes)
                         }
                     }
-                    .themedRow()
+                    .themedCardRow()
 
                     Toggle("Audio only", isOn: $audioOnly)
                         .tint(Color.appAccent)
-                        .themedRow()
+                        .themedCardRow()
                 } header: {
                     sectionHeader("Source playlist")
                 } footer: {
@@ -71,17 +71,17 @@ struct PlaylistSyncView: View {
                             Text(statusText(for: subscription))
                                 .foregroundStyle(subscription.lastStatus == .failed ? Color.appDanger : Color.appTextSecondary)
                         }
-                        .themedRow()
+                        .themedCardRow()
                         LabeledContent("Tracks added") {
                             Text("\(subscription.addedCount)")
                                 .foregroundStyle(Color.appTextSecondary)
                         }
-                        .themedRow()
+                        .themedCardRow()
                         if let error = subscription.lastError {
                             Text(error)
                                 .font(.caption)
                                 .foregroundStyle(Color.appDanger)
-                                .themedRow()
+                                .themedCardRow()
                         }
                     } header: {
                         sectionHeader("Last run")
@@ -94,7 +94,7 @@ struct PlaylistSyncView: View {
                              (lastResult.failed > 0 ? " · \(lastResult.failed) failed" : ""))
                             .font(.footnote)
                             .foregroundStyle(Color.appAccent)
-                            .themedRow()
+                            .themedCardRow()
                     }
                 }
 
@@ -111,7 +111,6 @@ struct PlaylistSyncView: View {
                     }
                     .buttonStyle(AccentButtonStyle(fullWidth: true))
                     .disabled(!canSave)
-                    .opacity(canSave ? 1 : 0.5)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
 

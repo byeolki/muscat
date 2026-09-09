@@ -25,16 +25,7 @@ struct TrackListView: View {
                         }
                         .buttonStyle(.plain)
 
-                        Button {
-                            detailTrackId = track.id
-                        } label: {
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(Color.appTextTertiary)
-                                .padding(.vertical, 12)
-                                .padding(.leading, 6)
-                        }
-                        .buttonStyle(.plain)
+                        DetailDisclosureButton { detailTrackId = track.id }
                     }
                     .themedRow()
                     .contextMenu {

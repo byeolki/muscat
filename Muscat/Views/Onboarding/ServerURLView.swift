@@ -32,13 +32,23 @@ struct ServerURLView: View {
             .padding(.bottom, 36)
 
             VStack(spacing: 16) {
-                TextField("", text: $urlText, prompt: Text("https://music.example.com").foregroundStyle(Color.appTextTertiary))
+                TextField("", text: $urlText, prompt: fieldPrompt("music.example.com"))
                     #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     #endif
                     .autocorrectionDisabled()
                     .themedField()
+                    .onSubmit { Task { await verifyAndSave() } }
+
+                // The placeholder no longer shows a scheme, so say what happens
+                // when it's left out rather than letting people guess.
+                Text(verbatim: "https:// is assumed unless you type http://")
+                    .font(.caption)
+                    .foregroundStyle(Color.appTextTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
+                    .padding(.top, -6)
 
                 if let errorMessage {
                     ErrorBanner(message: errorMessage)
@@ -56,11 +66,9 @@ struct ServerURLView: View {
                 }
                 .buttonStyle(AccentButtonStyle(fullWidth: true))
                 .disabled(urlText.trimmingCharacters(in: .whitespaces).isEmpty || isChecking)
-                .opacity(urlText.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
             }
             .frame(maxWidth: 420)
 
-            Spacer()
             Spacer()
         }
         .padding(24)

@@ -13,7 +13,7 @@ struct AdminLibraryView: View {
         List {
             Section {
                 VStack(spacing: 12) {
-                    TextField("", text: $newRootPath, prompt: Text("Server filesystem path (e.g. /music)").foregroundStyle(Color.appTextTertiary))
+                    TextField("", text: $newRootPath, prompt: fieldPrompt("Server filesystem path (e.g. /music)"))
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
                         #endif
@@ -27,7 +27,6 @@ struct AdminLibraryView: View {
                     }
                     .buttonStyle(AccentButtonStyle(fullWidth: true))
                     .disabled(newRootPath.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .opacity(newRootPath.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
                 }
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)

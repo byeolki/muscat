@@ -45,6 +45,12 @@ public extension Color {
 
 /// Filled lime pill — the one primary action per screen. Black text on the
 /// light accent for contrast (Spotify-style).
+///
+/// The style renders its own disabled state. Call sites used to pair
+/// `.disabled(...)` with `.opacity(0.5)`, which half-faded the lime against the
+/// near-black background into a muddy olive that read as a rendering fault
+/// rather than an unavailable button; a disabled button now drops to the surface
+/// colour instead, the same treatment as any other inert control.
 public struct AccentButtonStyle: ButtonStyle {
     public var fullWidth: Bool
 
@@ -53,18 +59,39 @@ public struct AccentButtonStyle: ButtonStyle {
     }
 
     public func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.black)
-            .padding(.vertical, 13)
-            .padding(.horizontal, 20)
-            .frame(maxWidth: fullWidth ? .infinity : nil)
-            .background(
-                Color.appAccent
-                    .opacity(configuration.isPressed ? 0.75 : 1),
-                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-            )
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        AccentButtonBody(configuration: configuration, fullWidth: fullWidth)
+    }
+
+    /// `isEnabled` is only readable from a real `View`, not from `makeBody`.
+    /// Named away from `Body` so it can't be mistaken for the protocol's own
+    /// `associatedtype Body`, which a nested type of that name shadows.
+    private struct AccentButtonBody: View {
+        let configuration: Configuration
+        let fullWidth: Bool
+
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .font(.body.weight(.semibold))
+                .foregroundStyle(isEnabled ? Color.black : Color.appTextTertiary)
+                .padding(.vertical, 13)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: fullWidth ? .infinity : nil)
+                .background(
+                    isEnabled
+                        ? Color.appAccent.opacity(configuration.isPressed ? 0.75 : 1)
+                        : Color.appSurfaceRaised,
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                )
+                .overlay {
+                    if !isEnabled {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.appBorder, lineWidth: 1)
+                    }
+                }
+                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        }
     }
 }
 
@@ -100,6 +127,11 @@ public struct ThemedField: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .textFieldStyle(.plain)
+            // Without this the caret and selection handles draw in the system
+            // blue, which is the one bit of stock iOS chrome that survives an
+            // otherwise fully themed screen.
+            .tint(Color.appAccent)
+            .foregroundStyle(Color.appTextPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, 13)
             .background(Color.appSurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -108,6 +140,17 @@ public struct ThemedField: ViewModifier {
                     .stroke(Color.appBorder, lineWidth: 1)
             )
     }
+}
+
+/// Placeholder text for a `themedField()` input.
+///
+/// `Text("…")` takes a `LocalizedStringKey`, and SwiftUI runs those through its
+/// markdown parser — which turns a bare `https://…` into a link, drawn in the
+/// system link colour and ignoring any `foregroundStyle` applied to the `Text`.
+/// That is why the server-address placeholder rendered blue. `verbatim:` opts out
+/// of the key lookup and the markdown pass, so a prompt is always plain text.
+public func fieldPrompt(_ text: String) -> Text {
+    Text(verbatim: text).foregroundStyle(Color.appTextTertiary)
 }
 
 // MARK: - Screens & lists
@@ -130,8 +173,21 @@ public extension View {
             .background(Color.appBackground.ignoresSafeArea())
     }
 
-    /// Standard row treatment inside a themed `List`.
+    /// Standard row treatment inside a themed `.plain` `List`.
+    ///
+    /// The row background is deliberately clear. Painting rows in `appSurface`
+    /// makes a full-bleed plain list read as a lighter slab laid over the screen,
+    /// with a visible step where it starts — right under the navigation title.
+    /// Separators carry the row structure instead.
     func themedRow() -> some View {
+        self
+            .listRowBackground(Color.clear)
+            .listRowSeparatorTint(Color.appBorder)
+    }
+
+    /// Row treatment for a `Form`/grouped list, where the surface fill is the
+    /// card and is meant to be visible against the screen behind it.
+    func themedCardRow() -> some View {
         self
             .listRowBackground(Color.appSurface)
             .listRowSeparatorTint(Color.appBorder)
@@ -237,4 +293,87 @@ public func artistLineText(
         return base + separator + coverWord + Text(" of \(originalArtist)").foregroundColor(textColor)
     }
     return base + separator + coverWord
+}
+
+// MARK: - Now playing indicator
+
+/// Three bouncing bars, drawn over the artwork of whichever row is currently
+/// playing. The Podo web dashboard marks the playing row the same way; before
+/// this, a list gave no indication at all of which of its rows the mini player
+/// was actually playing.
+public struct NowPlayingBars: View {
+    public var color: Color
+    public var height: CGFloat
+    /// Paused rows keep the bars (the row is still "the current one") but hold
+    /// them still.
+    public var isAnimating: Bool
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var raised = false
+
+    /// Heights the bars rest at when they aren't animating, so a paused or
+    /// reduce-motion row still reads as an equaliser rather than a solid block.
+    private static let restingRatios: [CGFloat] = [0.45, 1.0, 0.65]
+
+    public init(color: Color = .appAccent, height: CGFloat = 13, isAnimating: Bool = true) {
+        self.color = color
+        self.height = height
+        self.isAnimating = isAnimating
+    }
+
+    private var motionEnabled: Bool { isAnimating && !reduceMotion }
+
+    public var body: some View {
+        HStack(alignment: .bottom, spacing: 2.5) {
+            ForEach(Array(Self.restingRatios.enumerated()), id: \.offset) { index, resting in
+                Capsule()
+                    .fill(color)
+                    .frame(width: 2.5, height: barHeight(index: index, resting: resting))
+                    .animation(
+                        motionEnabled
+                            ? .easeInOut(duration: 0.5)
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.18)
+                            : .easeOut(duration: 0.2),
+                        value: raised
+                    )
+            }
+        }
+        .frame(height: height, alignment: .bottom)
+        .onAppear { raised = true }
+        .accessibilityHidden(true)
+    }
+
+    private func barHeight(index: Int, resting: CGFloat) -> CGFloat {
+        guard motionEnabled else { return height * resting }
+        return raised ? height : height * 0.3
+    }
+}
+
+// MARK: - Disclosure
+
+/// The trailing chevron that opens a track's detail page from a list row.
+///
+/// It is a button in its own right — tapping the row plays the track instead —
+/// so it needs a real accessibility label (VoiceOver was announcing the bare
+/// glyph as "Forward") and a tap target tall enough to hit reliably without
+/// catching the row underneath it.
+public struct DetailDisclosureButton: View {
+    private let action: () -> Void
+
+    public init(action: @escaping () -> Void) {
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.appTextTertiary)
+                .frame(width: 30, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Track details")
+    }
 }

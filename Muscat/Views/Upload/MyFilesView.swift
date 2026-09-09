@@ -112,7 +112,7 @@ struct MyFilesView: View {
         ) {
             TextField(
                 "", text: $renameText,
-                prompt: Text("File name").foregroundStyle(Color.appTextTertiary))
+                prompt: fieldPrompt("File name"))
             Button("Cancel", role: .cancel) { renamingFile = nil }
             Button("Save") {
                 if let file = renamingFile {

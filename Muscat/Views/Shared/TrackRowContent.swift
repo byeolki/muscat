@@ -8,6 +8,8 @@ import SwiftUI
 /// list, favorites and playlist entries — those endpoints wrap the row
 /// differently but carry the same displayable fields.
 struct TrackRowContent: View {
+    @Environment(PlayerStore.self) private var playerStore
+
     let title: String
     let artist: String
     let artworkId: String?
@@ -17,8 +19,12 @@ struct TrackRowContent: View {
     let duration: Double?
     let hasVideo: Bool
     let isFavorited: Bool
+    /// Lets the row recognise itself as the one the player is on. Optional
+    /// because `AlbumTrackEntry` rows are built from the field-by-field init.
+    let trackId: String?
 
     init(track: some TrackRowDisplayable) {
+        trackId = track.id
         title = track.title
         artist = track.displayArtist
         artworkId = track.artworkId
@@ -41,8 +47,10 @@ struct TrackRowContent: View {
         originalArtist: String? = nil,
         duration: Double?,
         hasVideo: Bool = false,
-        isFavorited: Bool = false
+        isFavorited: Bool = false,
+        trackId: String? = nil
     ) {
+        self.trackId = trackId
         self.title = title
         self.artist = artist
         self.artworkId = artworkId
@@ -54,15 +62,31 @@ struct TrackRowContent: View {
         self.isFavorited = isFavorited
     }
 
+    /// True when the player is on this exact track — whether or not it is
+    /// currently paused.
+    private var isCurrent: Bool {
+        guard let trackId else { return false }
+        return playerStore.currentTrack?.id == trackId
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             RemoteArtworkView(artworkId: artworkId, fallbackArtworkId: fallbackArtworkId, cornerRadius: 8)
                 .frame(width: 48, height: 48)
+                .overlay {
+                    if isCurrent {
+                        ZStack {
+                            Color.black.opacity(0.55)
+                            NowPlayingBars(isAnimating: playerStore.isPlaying)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.appTextPrimary)
+                    .font(.subheadline.weight(isCurrent ? .semibold : .medium))
+                    .foregroundStyle(isCurrent ? Color.appAccent : Color.appTextPrimary)
                     .lineLimit(1)
                 artistLineText(
                     artist: artist,
@@ -91,10 +115,23 @@ struct TrackRowContent: View {
                         .font(.caption)
                         .foregroundStyle(Color.appTextTertiary)
                         .monospacedDigit()
+                        // Fixed width so the times form a straight column
+                        // instead of shifting with each row's badge count.
+                        .frame(width: 34, alignment: .trailing)
                 }
             }
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [title, artist.isEmpty ? "Unknown Artist" : artist]
+        if isCover { parts.append("cover") }
+        if isFavorited { parts.append("favorited") }
+        if isCurrent { parts.append(playerStore.isPlaying ? "now playing" : "paused") }
+        return parts.joined(separator: ", ")
     }
 }

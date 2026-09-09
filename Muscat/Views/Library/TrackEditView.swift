@@ -62,9 +62,9 @@ struct TrackEditView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         fieldLabel("Info")
-                        TextField("", text: $title, prompt: Text("Title").foregroundStyle(Color.appTextTertiary))
+                        TextField("", text: $title, prompt: fieldPrompt("Title"))
                             .themedField()
-                        TextField("", text: $artist, prompt: Text("Artist").foregroundStyle(Color.appTextTertiary))
+                        TextField("", text: $artist, prompt: fieldPrompt("Artist"))
                             .themedField()
 
                         Toggle("Cover song", isOn: $isCover)
@@ -74,13 +74,13 @@ struct TrackEditView: View {
                             .background(Color.appSurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                         if isCover {
-                            TextField("", text: $coverByArtist, prompt: Text("Cover by").foregroundStyle(Color.appTextTertiary))
+                            TextField("", text: $coverByArtist, prompt: fieldPrompt("Cover by"))
                                 .themedField()
                         }
 
                         TextField(
                             "", text: $alternateTitles,
-                            prompt: Text("Alternate names (comma-separated)").foregroundStyle(Color.appTextTertiary)
+                            prompt: fieldPrompt("Alternate names (comma-separated)")
                         )
                         .themedField()
                     }
@@ -125,7 +125,6 @@ struct TrackEditView: View {
                     }
                     .buttonStyle(AccentButtonStyle(fullWidth: true))
                     .disabled(!canSubmit)
-                    .opacity(canSubmit ? 1 : 0.5)
                 }
                 .padding(24)
                 .frame(maxWidth: 480)

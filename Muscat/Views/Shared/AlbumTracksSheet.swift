@@ -32,7 +32,8 @@ struct AlbumTracksSheet: View {
                                         artworkId: track.artworkId,
                                         fallbackArtworkId: track.fallbackArtworkId,
                                         isCover: track.isCover,
-                                        duration: track.durationSeconds
+                                        duration: track.durationSeconds,
+                                        trackId: track.id
                                     )
                                 }
                                 .buttonStyle(.plain)

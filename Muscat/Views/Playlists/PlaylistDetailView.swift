@@ -82,7 +82,6 @@ struct PlaylistDetailView: View {
                     }
                     .buttonStyle(AccentButtonStyle())
                     .disabled(queue.isEmpty)
-                    .opacity(queue.isEmpty ? 0.5 : 1)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
