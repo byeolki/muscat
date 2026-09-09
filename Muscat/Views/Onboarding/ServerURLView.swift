@@ -14,14 +14,11 @@ struct ServerURLView: View {
             Spacer()
 
             VStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color.appAccent.opacity(0.12))
-                        .frame(width: 88, height: 88)
-                    Image(systemName: "server.rack")
-                        .font(.system(size: 36, weight: .light))
-                        .foregroundStyle(Color.appAccent)
-                }
+                Image("AppMark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 92, height: 92)
+                    .accessibilityHidden(true)
 
                 Text("Connect to Podo")
                     .font(.title.bold())

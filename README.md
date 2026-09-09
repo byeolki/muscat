@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/muscat_lg.png" alt="Muscat" width="110" />
+</p>
+
 <h1 align="center">Muscat</h1>
 
 <p align="center">

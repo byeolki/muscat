@@ -15,7 +15,7 @@ struct RootView: View {
             } else if authStore.isAuthenticated {
                 MainTabView()
             } else {
-                LoginView()
+                LoginView(onChangeServer: changeServer)
             }
         }
         .themedScreen()
@@ -25,5 +25,12 @@ struct RootView: View {
                 await authStore.restoreSession()
             }
         }
+    }
+
+    /// Drops the stored server address and returns to onboarding. Without this a
+    /// wrong address entered once could only be undone by reinstalling.
+    private func changeServer() {
+        appEnvironment.serverConfig.clear()
+        isServerConfigured = false
     }
 }
