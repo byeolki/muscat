@@ -15,7 +15,9 @@ struct TrackRowContent: View {
     let artworkId: String?
     let fallbackArtworkId: String?
     let isCover: Bool
-    let originalArtist: String?
+    /// Who performed this version, when it's a cover — `nil` when that would just
+    /// repeat the lead artist.
+    let performers: String?
     let duration: Double?
     let hasVideo: Bool
     let isFavorited: Bool
@@ -30,7 +32,7 @@ struct TrackRowContent: View {
         artworkId = track.artworkId
         fallbackArtworkId = track.fallbackArtworkId
         isCover = track.isCover
-        originalArtist = track.originalArtist
+        performers = track.coverPerformers
         duration = track.durationSeconds
         hasVideo = track.hasVideo
         isFavorited = track.isFavorited
@@ -44,7 +46,7 @@ struct TrackRowContent: View {
         artworkId: String?,
         fallbackArtworkId: String? = nil,
         isCover: Bool,
-        originalArtist: String? = nil,
+        performers: String? = nil,
         duration: Double?,
         hasVideo: Bool = false,
         isFavorited: Bool = false,
@@ -56,7 +58,7 @@ struct TrackRowContent: View {
         self.artworkId = artworkId
         self.fallbackArtworkId = fallbackArtworkId
         self.isCover = isCover
-        self.originalArtist = originalArtist
+        self.performers = performers
         self.duration = duration
         self.hasVideo = hasVideo
         self.isFavorited = isFavorited
@@ -91,7 +93,7 @@ struct TrackRowContent: View {
                 artistLineText(
                     artist: artist,
                     isCover: isCover,
-                    originalArtist: originalArtist
+                    performers: performers
                 )
                 .font(.caption)
                 .lineLimit(1)
@@ -129,7 +131,9 @@ struct TrackRowContent: View {
 
     private var accessibilityLabel: String {
         var parts = [title, artist.isEmpty ? "Unknown Artist" : artist]
-        if isCover { parts.append("cover") }
+        if isCover {
+            parts.append(performers.map { "covered by \($0)" } ?? "cover")
+        }
         if isFavorited { parts.append("favorited") }
         if isCurrent { parts.append(playerStore.isPlaying ? "now playing" : "paused") }
         return parts.joined(separator: ", ")

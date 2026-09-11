@@ -50,7 +50,7 @@ struct TrackDetailView: View {
                     artistLineText(
                         artist: detail?.displayArtist ?? queue[safe: index]?.displayArtist ?? "",
                         isCover: detail?.isCover ?? false,
-                        originalArtist: detail?.override?.originalArtist
+                        performers: detail?.coverPerformers
                     )
                     .font(.subheadline)
                 }

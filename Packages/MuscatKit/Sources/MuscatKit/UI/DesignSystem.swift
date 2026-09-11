@@ -278,14 +278,23 @@ public struct BadgeLabel: View {
 
 // MARK: - Artist / cover line
 
-/// Renders "Artist Name" or, for covers, "Artist Name · cover of Original Artist" with
-/// "cover" highlighted in the accent color — the same row wording the Podo web
-/// dashboard uses. `originalArtist` is only available where the model carries override data
-/// (`Track`, `TrackDetail`); pass `nil` elsewhere to fall back to a plain "· cover" tag.
+/// Renders "Artist" or, for a cover, "Original Artist · covered by Performers",
+/// with the cover marker in the accent colour. Same wording as the Podo web
+/// dashboard, so a track reads identically on both.
+///
+/// The order matters and it isn't the obvious one: the lead is the artist of the
+/// *original* song (see `TrackDisplayable.displayArtist`), and the people who
+/// performed this particular version follow. "covered by" rather than "cover of"
+/// because with this ordering "cover of" would assert the reverse — that the
+/// original artist covered the people who actually covered them.
+///
+/// `performers` is `nil` where the model has no override data (`AlbumTrackEntry`)
+/// or where they'd merely repeat the lead; the row then carries a plain "cover"
+/// tag.
 public func artistLineText(
     artist: String,
     isCover: Bool,
-    originalArtist: String?,
+    performers: String?,
     textColor: Color = .appTextSecondary,
     dimColor: Color = .appTextTertiary
 ) -> Text {
@@ -293,12 +302,13 @@ public func artistLineText(
     guard isCover else { return base }
 
     let separator = Text(" · ").foregroundColor(dimColor)
-    let coverWord = Text("cover").foregroundColor(.appAccent)
 
-    if let originalArtist, !originalArtist.isEmpty {
-        return base + separator + coverWord + Text(" of \(originalArtist)").foregroundColor(textColor)
+    if let performers, !performers.isEmpty {
+        return base + separator
+            + Text("covered by").foregroundColor(.appAccent)
+            + Text(" \(performers)").foregroundColor(textColor)
     }
-    return base + separator + coverWord
+    return base + separator + Text("cover").foregroundColor(.appAccent)
 }
 
 // MARK: - Now playing indicator

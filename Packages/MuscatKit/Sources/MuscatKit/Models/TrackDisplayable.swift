@@ -15,6 +15,8 @@ public protocol TrackDisplayable {
     /// Override-resolved artist names, already split by the server.
     var artists: [ArtistRef] { get }
     var isCover: Bool { get }
+    /// Who originally performed the song, when this track is a cover of it.
+    var originalArtist: String? { get }
     /// Duration as the server stores it: milliseconds. Named explicitly because
     /// the endpoints disagree on whether the field is `duration` or
     /// `canonical_duration`.
@@ -22,9 +24,31 @@ public protocol TrackDisplayable {
 }
 
 public extension TrackDisplayable {
-    /// Comma-joined, override-resolved artist names — safe for display.
-    var displayArtist: String {
+    /// The people performing *this* recording — the `artist` override, which for a
+    /// cover is whoever covered it.
+    var performerNames: String {
         artists.map(\.name).joined(separator: ", ")
+    }
+
+    /// The artist a row leads with.
+    ///
+    /// For a cover that's the artist of the original song, not the performers of
+    /// this version. In a library that is mostly covers, the song's own identity
+    /// is what you scan a list for — "EXO" tells you which song this is, where
+    /// the performers are the variable part and belong after the cover marker.
+    var displayArtist: String {
+        if isCover, let originalArtist, !originalArtist.isEmpty { return originalArtist }
+        return performerNames
+    }
+
+    /// The performers, but only when they add something the lead artist doesn't
+    /// already say — otherwise a cover with no recorded original would render as
+    /// "윤단 · covered by 윤단".
+    var coverPerformers: String? {
+        guard isCover else { return nil }
+        let performers = performerNames
+        guard !performers.isEmpty, performers != displayArtist else { return nil }
+        return performers
     }
 
     var durationSeconds: Double? {
@@ -53,8 +77,6 @@ public extension TrackDisplayable {
 /// renders — everything except `AlbumTrackEntry`, which the album endpoint returns
 /// without override or favorite data.
 public protocol TrackRowDisplayable: TrackDisplayable {
-    /// Who originally performed the song, when this track is a cover of it.
-    var originalArtist: String? { get }
     var hasVideo: Bool { get }
     var isFavorited: Bool { get }
 }

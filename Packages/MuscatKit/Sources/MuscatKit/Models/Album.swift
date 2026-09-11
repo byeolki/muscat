@@ -40,6 +40,9 @@ public struct AlbumTrackEntry: Codable, Hashable, Identifiable, TrackDisplayable
     public let artists: [ArtistRef]
 
     public var durationMilliseconds: Double? { duration }
+    /// The album endpoint doesn't return override data, so a cover here can only
+    /// be marked as one, not attributed.
+    public var originalArtist: String? { nil }
 }
 
 public struct AlbumVersion: Codable, Hashable, Identifiable {

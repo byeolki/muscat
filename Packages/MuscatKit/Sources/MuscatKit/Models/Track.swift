@@ -135,6 +135,7 @@ public struct TrackDetail: Codable, Hashable, Identifiable, TrackDisplayable {
     public let override: TrackMetadataOverride?
 
     public var durationMilliseconds: Double? { duration }
+    public var originalArtist: String? { override?.originalArtist }
 
     /// Mirrors the server's own `has_video` computation (`tracks.service.ts`):
     /// a video `Source` row OR a `video_locator` override, either one is enough. The
