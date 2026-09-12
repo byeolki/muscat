@@ -10,6 +10,7 @@ struct TrackListView: View {
     @State private var filter: TrackFilter = .all
     @State private var loadState = LoadableState<[Track]>()
     @State private var detailTrackId: String?
+    @State private var showAddMusic = false
 
     var body: some View {
         NavigationStack {
@@ -60,7 +61,19 @@ struct TrackListView: View {
                     )
                 }
             }
+            .sheet(isPresented: $showAddMusic) {
+                AddMusicView()
+            }
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showAddMusic = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundStyle(Color.appAccent)
+                    }
+                    .accessibilityLabel("Add music")
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Picker("Sort", selection: $sort) {
