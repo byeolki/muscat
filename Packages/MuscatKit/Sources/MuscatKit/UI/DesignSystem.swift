@@ -298,11 +298,22 @@ public func artistLineText(
     textColor: Color = .appTextSecondary,
     dimColor: Color = .appTextTertiary
 ) -> Text {
-    let base = Text(artist.isEmpty ? "Unknown Artist" : artist).foregroundColor(textColor)
-    guard isCover else { return base }
+    guard isCover else {
+        return Text(artist.isEmpty ? "Unknown Artist" : artist).foregroundColor(textColor)
+    }
 
+    // A cover whose original is unknown has nothing to lead with; naming the
+    // performer there would credit them with the song.
+    guard !artist.isEmpty else {
+        guard let performers, !performers.isEmpty else {
+            return Text("Cover").foregroundColor(.appAccent)
+        }
+        return Text("Cover by").foregroundColor(.appAccent)
+            + Text(" \(performers)").foregroundColor(textColor)
+    }
+
+    let base = Text(artist).foregroundColor(textColor)
     let separator = Text(" · ").foregroundColor(dimColor)
-
     if let performers, !performers.isEmpty {
         return base + separator
             + Text("covered by").foregroundColor(.appAccent)

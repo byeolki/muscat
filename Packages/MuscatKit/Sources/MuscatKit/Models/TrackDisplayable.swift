@@ -37,7 +37,10 @@ public extension TrackDisplayable {
     /// is what you scan a list for — "EXO" tells you which song this is, where
     /// the performers are the variable part and belong after the cover marker.
     var displayArtist: String {
-        if isCover, let originalArtist, !originalArtist.isEmpty { return originalArtist }
+        // A cover with no recorded original leads with nothing rather than with
+        // the performer: falling back put whoever covered it in the artist slot,
+        // so a track marked "cover, by 윤단" read as though 윤단 were the artist.
+        if isCover { return originalArtist?.isEmpty == false ? originalArtist! : "" }
         return performerNames
     }
 
@@ -47,7 +50,7 @@ public extension TrackDisplayable {
     var coverPerformers: String? {
         guard isCover else { return nil }
         let performers = performerNames
-        guard !performers.isEmpty, performers != displayArtist else { return nil }
+        guard !performers.isEmpty, performers != originalArtist else { return nil }
         return performers
     }
 
