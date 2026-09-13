@@ -29,8 +29,6 @@ targets:
     dependencies:
       - package: MuscatKit
         product: MuscatKit
-      - target: MuscatWidgetsExtension
-        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.muscat.client.ios
@@ -54,30 +52,7 @@ targets:
         NSLocalNetworkUsageDescription: >-
           Network access is needed to connect to your self-hosted Podo server,
           including servers on your local network.
-        NSSupportsLiveActivities: true
 
-  MuscatWidgetsExtension:
-    type: app-extension
-    platform: iOS
-    sources:
-      - path: MuscatWidgets
-    dependencies:
-      - package: MuscatKit
-        product: MuscatKit
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.muscat.client.ios.widgets
-        PRODUCT_NAME: MuscatWidgets
-        SWIFT_VERSION: "5.0"
-        MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "1"
-        SKIP_INSTALL: true
-    info:
-      path: Generated/MuscatWidgets-Info.plist
-      properties:
-        CFBundleDisplayName: Muscat Widgets
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
   Muscat-macOS:
     type: application
@@ -110,7 +85,6 @@ schemes:
     build:
       targets:
         Muscat-iOS: all
-        MuscatWidgetsExtension: all
     run:
       config: Debug
     test:

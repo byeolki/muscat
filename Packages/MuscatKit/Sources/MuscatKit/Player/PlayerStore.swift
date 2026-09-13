@@ -21,15 +21,17 @@ public final class PlayerStore {
     public private(set) var sleepTimer: SleepTimer = .off
 
     private static let repeatModeDefaultsKey = "muscat.repeatMode"
+    private static let shuffleDefaultsKey = "muscat.shuffle"
     private static let normalizeDefaultsKey = "muscat.normalize"
 
     private var queue = PlaybackQueue()
+    /// Set when the saved preference says shuffle, applied as soon as a queue exists.
+    private var restoreShuffleOnNextQueue = false
     private var sleepTimerTask: Task<Void, Never>?
     private let engine = AudioPlayerEngine()
     private let nowPlaying = NowPlayingCenter()
     private let apiClient: APIClient
     #if os(iOS)
-    private let liveActivity = LiveActivityController()
     #endif
 
     public init(apiClient: APIClient) {
@@ -39,6 +41,11 @@ public final class PlayerStore {
             repeatMode = mode
         } else {
             repeatMode = .off
+        }
+        if UserDefaults.standard.bool(forKey: Self.shuffleDefaultsKey) {
+            // Nothing is queued yet, so this only records the preference; the queue
+            // picks it up when something is played.
+            restoreShuffleOnNextQueue = true
         }
         normalize = UserDefaults.standard.bool(forKey: Self.normalizeDefaultsKey)
         configureAudioSession()
@@ -50,6 +57,7 @@ public final class PlayerStore {
     /// Repeat-all wraps the "next" affordance around to the first track, same as the
     /// web client disabling its next button only when `repeatMode !== 'all'`.
     public var hasNext: Bool { queue.hasNext || (repeatMode == .all && !queue.items.isEmpty) }
+    public var isShuffled: Bool { queue.isShuffled }
     public var hasPrevious: Bool { queue.hasPrevious }
 
     // MARK: - Sleep timer
@@ -86,6 +94,14 @@ public final class PlayerStore {
         pause()
     }
 
+    /// Shuffles what is queued, or puts it back in the order it arrived in. The
+    /// track playing keeps playing either way — the original order is kept so
+    /// turning shuffle off doesn't mean reloading the list that produced it.
+    public func toggleShuffle() {
+        queue.setShuffled(!queue.isShuffled)
+        UserDefaults.standard.set(queue.isShuffled, forKey: Self.shuffleDefaultsKey)
+    }
+
     public func cycleRepeatMode() {
         let order = RepeatMode.allCases
         let currentIndex = order.firstIndex(of: repeatMode) ?? 0
@@ -104,10 +120,23 @@ public final class PlayerStore {
     }
 
     /// Replaces the queue with `tracks` and starts playing the one at `index`.
-    public func play(tracks: [QueueTrack], startAt index: Int) {
+    ///
+    /// `shuffled` starts a shuffled run of the whole list, which is what a Shuffle
+    /// button means: a different order every press, not a mode you have to undo.
+    public func play(tracks: [QueueTrack], startAt index: Int, shuffled: Bool = false) {
         queue.replaceAll(tracks, startAt: index)
+        if shuffled || restoreShuffleOnNextQueue {
+            restoreShuffleOnNextQueue = false
+            queue.setShuffled(true)
+        }
         guard let track = queue.currentTrack else { return }
         Task { await loadAndPlay(track: track) }
+    }
+
+    /// Shuffles `tracks` and plays them from the top.
+    public func shuffle(tracks: [QueueTrack]) {
+        guard !tracks.isEmpty else { return }
+        play(tracks: tracks, startAt: 0, shuffled: true)
     }
 
     public func togglePlayPause() {
@@ -118,14 +147,12 @@ public final class PlayerStore {
         engine.play()
         isPlaying = true
         nowPlaying.updatePlaybackRate(isPlaying: true)
-        updateLiveActivity()
     }
 
     public func pause() {
         engine.pause()
         isPlaying = false
         nowPlaying.updatePlaybackRate(isPlaying: false)
-        updateLiveActivity()
     }
 
     public func skipToNext() {
@@ -187,7 +214,6 @@ public final class PlayerStore {
         }
         isPlaying = autoplay
         pushNowPlayingInfo(fetchArtwork: true)
-        startLiveActivity(for: track)
         // Only a genuine track start counts as a play, not a normalize-toggle reload
         // of the track already playing.
         if resumeAt == 0 {
@@ -195,26 +221,7 @@ public final class PlayerStore {
         }
     }
 
-    private func startLiveActivity(for track: QueueTrack) {
-        #if os(iOS)
-        liveActivity.start(
-            trackId: track.id, title: track.title, artist: track.displayArtist,
-            currentSeconds: 0, duration: duration ?? 0, isPlaying: true
-        )
-        #endif
-    }
 
-    /// Discrete updates only (start/pause/resume/skip), not a per-second tick — the
-    /// Dynamic Island shows a static progress readout, not a live-ticking counter.
-    private func updateLiveActivity() {
-        #if os(iOS)
-        guard let currentTrack else { return }
-        liveActivity.update(
-            title: currentTrack.title, artist: currentTrack.displayArtist,
-            currentSeconds: currentSeconds, duration: duration ?? 0, isPlaying: isPlaying
-        )
-        #endif
-    }
 
     private func wireEngineCallbacks() {
         engine.onPeriodicTimeUpdate = { [weak self] seconds in
@@ -237,7 +244,6 @@ public final class PlayerStore {
             self.isLoading = false
             self.errorMessage = message
             self.nowPlaying.updatePlaybackRate(isPlaying: false)
-            self.updateLiveActivity()
         }
     }
 

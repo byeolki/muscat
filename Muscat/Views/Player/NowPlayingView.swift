@@ -249,6 +249,15 @@ struct NowPlayingView: View {
     private var secondaryControls: some View {
         HStack(spacing: 0) {
             secondaryButton(
+                systemImage: "shuffle",
+                label: "Shuffle",
+                isOn: playerStore.isShuffled,
+                accessibilityLabel: playerStore.isShuffled ? "Shuffle on" : "Shuffle off"
+            ) {
+                playerStore.toggleShuffle()
+            }
+
+            secondaryButton(
                 systemImage: playerStore.repeatMode == .one ? "repeat.1" : "repeat",
                 label: repeatLabel,
                 isOn: playerStore.repeatMode != .off,

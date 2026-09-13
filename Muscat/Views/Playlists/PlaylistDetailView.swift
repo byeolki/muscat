@@ -75,13 +75,23 @@ struct PlaylistDetailView: View {
                         .frame(maxWidth: 260)
                     }
 
-                    Button {
-                        playerStore.play(tracks: queue, startAt: 0)
-                    } label: {
-                        Label(favoritesOnly ? "Play Favorites" : "Play All", systemImage: "play.fill")
+                    HStack(spacing: 10) {
+                        Button {
+                            playerStore.play(tracks: queue, startAt: 0)
+                        } label: {
+                            Label(favoritesOnly ? "Play Favorites" : "Play All", systemImage: "play.fill")
+                        }
+                        .buttonStyle(AccentButtonStyle())
+                        .disabled(queue.isEmpty)
+
+                        Button {
+                            playerStore.shuffle(tracks: queue)
+                        } label: {
+                            Label("Shuffle", systemImage: "shuffle")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(queue.isEmpty)
                     }
-                    .buttonStyle(AccentButtonStyle())
-                    .disabled(queue.isEmpty)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
