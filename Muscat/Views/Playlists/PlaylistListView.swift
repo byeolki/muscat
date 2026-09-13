@@ -61,6 +61,7 @@ struct PlaylistListView: View {
                         Image(systemName: "plus")
                             .foregroundStyle(Color.appAccent)
                     }
+                    .accessibilityLabel("New playlist")
                 }
             }
             .overlay {

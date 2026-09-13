@@ -38,7 +38,7 @@ struct LoginView: View {
                     // This app is Muscat. Podo is the server it talks to — naming
                     // it "Podo" here made the client look like the server.
                     Text("Muscat")
-                        .font(.system(size: 40, weight: .heavy, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.heavy))
                         .foregroundStyle(Color.appTextPrimary)
                     Text("Your Podo library, on this device.")
                         .font(.subheadline)

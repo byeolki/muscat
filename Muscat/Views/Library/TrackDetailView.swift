@@ -159,6 +159,7 @@ struct TrackDetailView: View {
                     Image(systemName: "pencil")
                         .foregroundStyle(Color.appAccent)
                 }
+                .accessibilityLabel("Edit track")
                 .disabled(detail == nil)
             }
         }

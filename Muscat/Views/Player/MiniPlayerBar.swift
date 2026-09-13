@@ -49,6 +49,7 @@ struct MiniPlayerBar: View {
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color.appTextPrimary)
                             .frame(width: 36, height: 36)
+                            .accessibilityLabel(playerStore.isPlaying ? "Pause" : "Play")
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -60,6 +61,7 @@ struct MiniPlayerBar: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(playerStore.hasNext ? Color.appTextPrimary : Color.appTextTertiary)
                             .frame(width: 36, height: 36)
+                            .accessibilityLabel("Next track")
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)

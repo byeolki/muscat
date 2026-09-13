@@ -84,6 +84,7 @@ struct MyFilesView: View {
                     Image(systemName: "plus")
                         .foregroundStyle(Color.appAccent)
                 }
+                .accessibilityLabel("Add files")
                 .disabled(isUploading)
             }
         }

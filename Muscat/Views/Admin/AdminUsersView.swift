@@ -46,6 +46,7 @@ struct AdminUsersView: View {
                             Image(systemName: "doc.on.doc")
                                 .foregroundStyle(Color.appTextSecondary)
                         }
+                        .accessibilityLabel("Copy invite code")
                         .buttonStyle(.plain)
                     }
                     .padding(12)

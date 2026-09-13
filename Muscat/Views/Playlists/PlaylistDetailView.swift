@@ -183,6 +183,7 @@ struct PlaylistDetailView: View {
                         Image(systemName: editMode?.wrappedValue.isEditing == true ? "checkmark.circle.fill" : "arrow.up.arrow.down.circle")
                             .foregroundStyle(Color.appAccent)
                     }
+                    .accessibilityLabel(editMode?.wrappedValue.isEditing == true ? "Done reordering" : "Reorder tracks")
                 }
             }
             #endif

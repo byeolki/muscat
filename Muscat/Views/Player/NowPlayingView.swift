@@ -161,7 +161,7 @@ struct NowPlayingView: View {
     private func titleBlock(for track: QueueTrack) -> some View {
         VStack(spacing: 5) {
             Text(track.title)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(.title2, design: .rounded).weight(.bold))
                 .foregroundStyle(Color.appTextPrimary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -300,7 +300,7 @@ struct NowPlayingView: View {
                 Image(systemName: systemImage)
                     .font(.system(size: 16, weight: .medium))
                 Text(label)
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
                     .monospacedDigit()
             }
             .foregroundStyle(isOn ? Color.appAccent : Color.appTextTertiary)

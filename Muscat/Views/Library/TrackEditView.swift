@@ -100,6 +100,7 @@ struct TrackEditView: View {
                                         .font(.caption)
                                         .foregroundStyle(Color.appTextTertiary)
                                 }
+                                .accessibilityLabel("Reset volume adjustment")
                                 .buttonStyle(.plain)
                             }
                         }
