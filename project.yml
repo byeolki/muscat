@@ -8,7 +8,7 @@ options:
 
 settings:
   base:
-    DEVELOPMENT_TEAM: GFLR4AF99Z
+    DEVELOPMENT_TEAM: K238X2NK58
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: Apple Development
 
