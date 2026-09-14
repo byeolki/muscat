@@ -17,6 +17,12 @@ public protocol TrackDisplayable {
     var isCover: Bool { get }
     /// Who originally performed the song, when this track is a cover of it.
     var originalArtist: String? { get }
+    /// Whether the track has a video the player can offer.
+    ///
+    /// Declared here rather than only on `TrackRowDisplayable` so it survives the
+    /// trip into the playback queue: a shape that carries it answers truthfully,
+    /// and one that doesn't (the album endpoint) answers false.
+    var hasVideo: Bool { get }
     /// Duration as the server stores it: milliseconds. Named explicitly because
     /// the endpoints disagree on whether the field is `duration` or
     /// `canonical_duration`.
@@ -24,6 +30,9 @@ public protocol TrackDisplayable {
 }
 
 public extension TrackDisplayable {
+    /// False unless the conforming shape actually knows.
+    var hasVideo: Bool { false }
+
     /// The people performing *this* recording — the `artist` override, which for a
     /// cover is whoever covered it.
     var performerNames: String {
@@ -104,6 +113,5 @@ public extension TrackDisplayable {
 /// renders — everything except `AlbumTrackEntry`, which the album endpoint returns
 /// without override or favorite data.
 public protocol TrackRowDisplayable: TrackDisplayable {
-    var hasVideo: Bool { get }
     var isFavorited: Bool { get }
 }

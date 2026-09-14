@@ -12,6 +12,7 @@ struct NowPlayingView: View {
     @State private var scrubPosition: Double?
     @State private var isScrubbing = false
     @State private var showSleepTimer = false
+    @State private var showVideo = false
     /// Ticks once a second purely to redraw the countdown chip.
     @State private var now = Date()
     /// Colour pulled from the current artwork; nil until it resolves, and on a
@@ -61,6 +62,11 @@ struct NowPlayingView: View {
         #endif
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now = $0 }
         .task(id: playerStore.currentTrack?.artworkId) { await loadPalette() }
+        .sheet(isPresented: $showVideo) {
+            if let track = playerStore.currentTrack {
+                VideoPlayerView(trackId: track.id, title: track.title)
+            }
+        }
         .sheet(isPresented: $showSleepTimer) {
             SleepTimerSheet(
                 current: playerStore.sleepTimer,
@@ -248,6 +254,17 @@ struct NowPlayingView: View {
 
     private var secondaryControls: some View {
         HStack(spacing: 0) {
+            if playerStore.currentTrack?.hasVideo == true {
+                secondaryButton(
+                    systemImage: "film",
+                    label: "Video",
+                    isOn: false,
+                    accessibilityLabel: "Play the music video"
+                ) {
+                    showVideo = true
+                }
+            }
+
             secondaryButton(
                 systemImage: "shuffle",
                 label: "Shuffle",

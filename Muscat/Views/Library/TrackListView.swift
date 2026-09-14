@@ -10,6 +10,7 @@ struct TrackListView: View {
     @State private var filter: TrackFilter = .all
     @State private var loadState = LoadableState<[Track]>()
     @State private var detailTrackId: String?
+    @State private var videoRequest: VideoRequest?
     @State private var showAddMusic = false
 
     var body: some View {
@@ -35,6 +36,13 @@ struct TrackListView: View {
                         } label: {
                             Label("Play", systemImage: "play.fill")
                         }
+                        if track.hasVideo {
+                            Button {
+                                videoRequest = VideoRequest(id: track.id, title: track.title)
+                            } label: {
+                                Label("Music video", systemImage: "film")
+                            }
+                        }
                     }
                     #if os(iOS)
                     .swipeActions(edge: .leading) {
@@ -51,6 +59,9 @@ struct TrackListView: View {
             .listStyle(.plain)
             .themedList()
             .navigationTitle("Library")
+            .sheet(item: $videoRequest) { request in
+                VideoPlayerView(trackId: request.id, title: request.title)
+            }
             .navigationDestination(item: $detailTrackId) { trackId in
                 if let index = tracks.firstIndex(where: { $0.id == trackId }) {
                     TrackDetailView(

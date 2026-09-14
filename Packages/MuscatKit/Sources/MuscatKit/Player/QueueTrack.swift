@@ -18,6 +18,8 @@ public struct QueueTrack: Identifiable, Hashable {
     /// The full credit for a player screen: whose song it is and who covered it.
     /// A row has room for only one of those; a player has room for both.
     public let artistLine: String
+    /// So the player can offer the video without going back to the library for it.
+    public let hasVideo: Bool
     /// Best available id to pass to `GET /artwork/:id` — album artwork if the track
     /// belongs to one, else the track's own id when it has a generated thumbnail
     /// (see each source type's `artworkId` computed property).
@@ -34,6 +36,7 @@ public struct QueueTrack: Identifiable, Hashable {
         displayArtist: String,
         performerArtist: String? = nil,
         artistLine: String? = nil,
+        hasVideo: Bool = false,
         artworkId: String?,
         fallbackArtworkId: String? = nil,
         duration: Double?
@@ -43,6 +46,7 @@ public struct QueueTrack: Identifiable, Hashable {
         self.displayArtist = displayArtist
         self.performerArtist = performerArtist?.isEmpty == false ? performerArtist! : displayArtist
         self.artistLine = artistLine?.isEmpty == false ? artistLine! : displayArtist
+        self.hasVideo = hasVideo
         self.artworkId = artworkId
         self.fallbackArtworkId = fallbackArtworkId
         self.duration = duration
@@ -60,6 +64,7 @@ public extension QueueTrack {
             displayArtist: track.displayArtist,
             performerArtist: track.nowPlayingArtist,
             artistLine: track.playerArtistLine,
+            hasVideo: track.hasVideo,
             artworkId: track.artworkId,
             fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds

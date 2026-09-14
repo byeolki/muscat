@@ -13,6 +13,7 @@ struct PlaylistDetailView: View {
     let playlistId: String
 
     @State private var playlist: PlaylistDetail?
+    @State private var videoRequest: VideoRequest?
     @State private var loadState = LoadableState<PlaylistDetail>()
     @State private var showAddTracks = false
     @State private var showEdit = false
@@ -110,6 +111,15 @@ struct PlaylistDetailView: View {
                     }
                     .buttonStyle(.plain)
                     .themedRow()
+                    .contextMenu {
+                        if entry.hasVideo {
+                            Button {
+                                videoRequest = VideoRequest(id: entry.id, title: entry.title)
+                            } label: {
+                                Label("Music video", systemImage: "film")
+                            }
+                        }
+                    }
                 }
                 // Reordering and deleting index into the full list, so they're
                 // only offered when the full list is what's on screen.
@@ -131,6 +141,9 @@ struct PlaylistDetailView: View {
         }
         .listStyle(.plain)
         .themedList()
+        .sheet(item: $videoRequest) { request in
+            VideoPlayerView(trackId: request.id, title: request.title)
+        }
         .navigationTitle(playlist?.name ?? "")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
