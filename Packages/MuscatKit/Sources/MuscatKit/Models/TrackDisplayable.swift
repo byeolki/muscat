@@ -66,6 +66,18 @@ public extension TrackDisplayable {
         return displayArtist
     }
 
+    /// The credit a player screen shows — "EXO · covered by 윤단".
+    ///
+    /// A list row leads with whose song it is, because that is what you scan for.
+    /// A player has one line and room for the whole answer, and showing only the
+    /// original there credits the wrong person for what is coming out of the
+    /// speaker.
+    var playerArtistLine: String {
+        guard let performers = coverPerformers else { return displayArtist }
+        let lead = displayArtist
+        return lead.isEmpty ? "Cover by \(performers)" : "\(lead) · covered by \(performers)"
+    }
+
     var durationSeconds: Double? {
         durationMilliseconds.map { $0 / 1000 }
     }

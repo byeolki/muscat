@@ -127,7 +127,9 @@ public final class PlayerStore {
         queue.replaceAll(tracks, startAt: index)
         if shuffled || restoreShuffleOnNextQueue {
             restoreShuffleOnNextQueue = false
-            queue.setShuffled(true)
+            // `keepingCurrent: false` for a shuffle that is starting the list, so it
+            // begins on a random track rather than the one at the top.
+            queue.setShuffled(true, keepingCurrent: !shuffled)
         }
         guard let track = queue.currentTrack else { return }
         Task { await loadAndPlay(track: track) }

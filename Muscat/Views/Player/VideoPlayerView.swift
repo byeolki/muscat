@@ -15,6 +15,7 @@ struct VideoPlayerView: View {
 
     @State private var player: AVPlayer?
     @State private var errorMessage: String?
+    @State private var statusObserver: NSKeyValueObservation?
 
     var body: some View {
         NavigationStack {
@@ -45,17 +46,36 @@ struct VideoPlayerView: View {
             await loadVideo()
         }
         .onDisappear {
+            statusObserver = nil
             player?.pause()
         }
     }
 
     private func loadVideo() async {
         guard let url = await appEnvironment.apiClient.streamURL(trackId: trackId, mediaKind: .video) else {
-            errorMessage = "Could not build a video streaming URL."
+            await fail("Could not build a video streaming URL.")
             return
         }
-        let newPlayer = AVPlayer(url: url)
+        let item = AVPlayerItem(url: url)
+        // Without this the view sits on its spinner for ever when the item can't be
+        // played — a 404 from the stream endpoint, a container iOS won't decode, an
+        // expired token. "Nothing happens" was the whole failure mode.
+        statusObserver = item.observe(\.status, options: [.new]) { item, _ in
+            guard item.status == .failed else { return }
+            let reason = item.error?.localizedDescription ?? "the video could not be played"
+            Task { @MainActor in await fail(reason) }
+        }
+        let newPlayer = AVPlayer(playerItem: item)
         player = newPlayer
         newPlayer.play()
+    }
+
+    @MainActor
+    private func fail(_ message: String) async {
+        errorMessage = message
+        player = nil
+        await appEnvironment.apiClient.reportClientError(
+            kind: "video.failed", message: message, context: "track \(trackId) — \(title)"
+        )
     }
 }

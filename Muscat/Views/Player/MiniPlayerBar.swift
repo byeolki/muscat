@@ -34,7 +34,7 @@ struct MiniPlayerBar: View {
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color.appTextPrimary)
                             .lineLimit(1)
-                        Text(track.displayArtist)
+                        Text(track.artistLine)
                             .font(.caption)
                             .foregroundStyle(Color.appTextSecondary)
                             .lineLimit(1)

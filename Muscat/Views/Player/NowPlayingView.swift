@@ -166,7 +166,7 @@ struct NowPlayingView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
-            Text(track.displayArtist)
+            Text(track.artistLine)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color.appTextSecondary)
                 .lineLimit(1)
@@ -328,7 +328,10 @@ struct NowPlayingView: View {
         case .endOfTrack:
             return "End"
         case .at(let deadline):
-            let minutes = max(0, Int((deadline.timeIntervalSince(now) / 60).rounded(.up)))
+            // Rounded to nearest, not up: `now` is sampled on a tick, so a deadline
+            // set ninety minutes out is a hair over ninety when measured against it —
+            // and rounding up turned "90 minutes" into "91m" the instant it was set.
+            let minutes = max(1, Int((deadline.timeIntervalSince(now) / 60).rounded()))
             return "\(minutes)m"
         }
     }

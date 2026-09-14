@@ -36,12 +36,16 @@ struct PlaybackQueue {
     /// Shuffles everything except the track playing, which stays put and stays
     /// playing — reshuffling the current track out from under the listener is the
     /// one thing a shuffle button must not do.
-    mutating func setShuffled(_ shuffled: Bool) {
+    mutating func setShuffled(_ shuffled: Bool, keepingCurrent: Bool = true) {
         guard shuffled != isShuffled else { return }
         isShuffled = shuffled
 
-        guard let playing = currentTrack else {
+        // Starting a shuffled run should start somewhere new. Pinning the current
+        // track meant pressing Shuffle on a fresh list always began with its first
+        // song, which is the one order nobody pressed Shuffle to hear.
+        guard keepingCurrent, let playing = currentTrack else {
             items = shuffled ? items.shuffled() : originalOrder
+            currentIndex = items.isEmpty ? nil : 0
             return
         }
 
