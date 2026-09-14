@@ -70,7 +70,7 @@ final class NowPlayingCenter {
     ) {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: track.title,
-            MPMediaItemPropertyArtist: track.displayArtist,
+            MPMediaItemPropertyArtist: track.performerArtist,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentSeconds,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
         ]

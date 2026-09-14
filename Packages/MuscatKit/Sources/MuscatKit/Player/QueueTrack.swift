@@ -8,6 +8,13 @@ public struct QueueTrack: Identifiable, Hashable {
     public let id: String
     public let title: String
     public let displayArtist: String
+    /// Who is performing *this* recording.
+    ///
+    /// Separate from `displayArtist` because the two answer different questions.
+    /// A list leads with whose song it is — "EXO" tells you which song a row is.
+    /// The lock screen is asking who you are listening to, and for a cover that is
+    /// the person who covered it.
+    public let performerArtist: String
     /// Best available id to pass to `GET /artwork/:id` — album artwork if the track
     /// belongs to one, else the track's own id when it has a generated thumbnail
     /// (see each source type's `artworkId` computed property).
@@ -22,6 +29,7 @@ public struct QueueTrack: Identifiable, Hashable {
         id: String,
         title: String,
         displayArtist: String,
+        performerArtist: String? = nil,
         artworkId: String?,
         fallbackArtworkId: String? = nil,
         duration: Double?
@@ -29,6 +37,7 @@ public struct QueueTrack: Identifiable, Hashable {
         self.id = id
         self.title = title
         self.displayArtist = displayArtist
+        self.performerArtist = performerArtist?.isEmpty == false ? performerArtist! : displayArtist
         self.artworkId = artworkId
         self.fallbackArtworkId = fallbackArtworkId
         self.duration = duration
@@ -44,6 +53,7 @@ public extension QueueTrack {
             id: track.id,
             title: track.title,
             displayArtist: track.displayArtist,
+            performerArtist: track.nowPlayingArtist,
             artworkId: track.artworkId,
             fallbackArtworkId: track.fallbackArtworkId,
             duration: track.durationSeconds

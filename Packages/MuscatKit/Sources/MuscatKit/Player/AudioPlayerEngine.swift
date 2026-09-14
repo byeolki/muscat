@@ -18,6 +18,13 @@ final class AudioPlayerEngine {
     /// error surfaces, and the caller's optimistic `isPlaying = true` from `load(autoplay:)`
     /// is never corrected, so the UI is stuck showing "playing" over silence.
     var onFailedToLoad: ((_ message: String) -> Void)?
+    /// Playback actually started or actually stopped, from `AVPlayer` itself.
+    ///
+    /// Everything that can stop playback without going through this app reports
+    /// here: another app taking the audio session, headphones coming out, a phone
+    /// call, Siri. Nothing was listening before, so the store kept believing it was
+    /// playing and the button kept offering Pause over silence.
+    var onPlaybackStateChange: ((_ isPlaying: Bool) -> Void)?
 
     private var player: AVPlayer?
     private var timeObserverToken: Any?
@@ -25,6 +32,7 @@ final class AudioPlayerEngine {
     private var stalledObserver: NSObjectProtocol?
     private var failedToPlayObserver: NSObjectProtocol?
     private var statusObservation: NSKeyValueObservation?
+    private var rateObservation: NSKeyValueObservation?
     private var durationLoadTask: Task<Void, Never>?
 
     var isPlaying: Bool { (player?.rate ?? 0) > 0 }
@@ -32,6 +40,26 @@ final class AudioPlayerEngine {
     var currentSeconds: Double {
         guard let time = player?.currentTime(), time.isValid else { return 0 }
         return time.seconds
+    }
+
+    /// `timeControlStatus` rather than `rate`, because it distinguishes "stopped"
+    /// from "wants to play but is waiting for data". Reporting a buffering stall as
+    /// a pause would flip the button every time the network hesitated.
+    private func observePlaybackState(of player: AVPlayer) {
+        guard rateObservation == nil else { return }
+        rateObservation = player.observe(\.timeControlStatus, options: [.new]) { [weak self] player, _ in
+            guard let self else { return }
+            switch player.timeControlStatus {
+            case .playing:
+                DispatchQueue.main.async { self.onPlaybackStateChange?(true) }
+            case .paused:
+                DispatchQueue.main.async { self.onPlaybackStateChange?(false) }
+            case .waitingToPlayAtSpecifiedRate:
+                break
+            @unknown default:
+                break
+            }
+        }
     }
 
     /// Loads a new item and begins playback immediately if `autoplay` is true.
@@ -42,6 +70,7 @@ final class AudioPlayerEngine {
         let newPlayer = player ?? AVPlayer()
         newPlayer.replaceCurrentItem(with: item)
         player = newPlayer
+        observePlaybackState(of: newPlayer)
 
         attachObservers(to: item, player: newPlayer)
 
@@ -148,6 +177,7 @@ final class AudioPlayerEngine {
     }
 
     deinit {
+        rateObservation = nil
         if let timeObserverToken {
             player?.removeTimeObserver(timeObserverToken)
         }

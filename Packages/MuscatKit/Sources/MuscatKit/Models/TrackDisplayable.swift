@@ -54,6 +54,18 @@ public extension TrackDisplayable {
         return performers
     }
 
+    /// What the lock screen, CarPlay and the headphone display should say.
+    ///
+    /// Whoever is performing, which for a cover is the person who covered it —
+    /// the system player is answering "who am I listening to", not "whose song is
+    /// this". A cover credited to nobody falls back to the original artist rather
+    /// than showing an empty artist line.
+    var nowPlayingArtist: String {
+        let performers = performerNames
+        if !performers.isEmpty { return performers }
+        return displayArtist
+    }
+
     var durationSeconds: Double? {
         durationMilliseconds.map { $0 / 1000 }
     }

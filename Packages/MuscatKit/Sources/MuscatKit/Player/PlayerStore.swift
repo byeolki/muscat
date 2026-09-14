@@ -224,6 +224,16 @@ public final class PlayerStore {
 
 
     private func wireEngineCallbacks() {
+        // The player is the authority on whether sound is coming out. Anything that
+        // stops it without asking this app — another app taking the session, a call,
+        // headphones unplugged, Siri — used to leave the button offering Pause over
+        // silence, because nothing told the store.
+        engine.onPlaybackStateChange = { [weak self] playing in
+            guard let self, self.isPlaying != playing else { return }
+            self.isPlaying = playing
+            self.nowPlaying.updatePlaybackRate(isPlaying: playing)
+        }
+
         engine.onPeriodicTimeUpdate = { [weak self] seconds in
             guard let self else { return }
             self.currentSeconds = seconds
@@ -236,7 +246,9 @@ public final class PlayerStore {
             self?.handleTrackDidFinish()
         }
         engine.onPlaybackStalled = { [weak self] in
-            self?.errorMessage = "Playback stalled. Check your network connection."
+            guard let self else { return }
+            self.errorMessage = "Playback stalled. Check your network connection."
+            self.report(kind: "playback.stalled", message: "the stream stopped delivering data")
         }
         engine.onFailedToLoad = { [weak self] message in
             guard let self else { return }
@@ -244,7 +256,18 @@ public final class PlayerStore {
             self.isLoading = false
             self.errorMessage = message
             self.nowPlaying.updatePlaybackRate(isPlaying: false)
+            self.report(kind: "playback.failed", message: message)
         }
+    }
+
+    /// Sends a failure to the server so it appears in the log the operator reads.
+    ///
+    /// Fire-and-forget, and never allowed to surface: a report that fails must not
+    /// become a second problem on top of the one it was describing. The track id
+    /// goes with it because "it stopped" is only actionable if you know on what.
+    private func report(kind: String, message: String) {
+        let context = currentTrack.map { "track \($0.id) — \($0.title)" }
+        Task { [apiClient] in await apiClient.reportClientError(kind: kind, message: message, context: context) }
     }
 
     private func wireNowPlayingCallbacks() {
