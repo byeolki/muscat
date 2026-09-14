@@ -12,7 +12,9 @@ struct NowPlayingView: View {
     @State private var scrubPosition: Double?
     @State private var isScrubbing = false
     @State private var showSleepTimer = false
+    /// The video takes the artwork's place while it is on; the audio keeps playing.
     @State private var showVideo = false
+    @State private var videoError: String?
     /// Ticks once a second purely to redraw the countdown chip.
     @State private var now = Date()
     /// Colour pulled from the current artwork; nil until it resolves, and on a
@@ -62,10 +64,9 @@ struct NowPlayingView: View {
         #endif
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now = $0 }
         .task(id: playerStore.currentTrack?.artworkId) { await loadPalette() }
-        .sheet(isPresented: $showVideo) {
-            if let track = playerStore.currentTrack {
-                VideoPlayerView(trackId: track.id, title: track.title)
-            }
+        .onChange(of: playerStore.currentTrack?.id) { _, _ in
+            showVideo = false
+            videoError = nil
         }
         .sheet(isPresented: $showSleepTimer) {
             SleepTimerSheet(
@@ -150,18 +151,40 @@ struct NowPlayingView: View {
 
     /// Shrinks while paused, the way the platform music apps do — it makes the
     /// play state readable from across a room, without another indicator.
+    @ViewBuilder
     private func artwork(for track: QueueTrack) -> some View {
-        RemoteArtworkView(
-            artworkId: track.artworkId,
-            fallbackArtworkId: track.fallbackArtworkId,
-            cornerRadius: 18
-        )
-        .aspectRatio(1, contentMode: .fit)
+        Group {
+            if showVideo && videoError == nil {
+                SyncedVideoView(trackId: track.id) { message in
+                    // Falls back to the cover rather than leaving a black square
+                    // where it used to be, and says why.
+                    videoError = message
+                    showVideo = false
+                }
+            } else {
+                RemoteArtworkView(
+                    artworkId: track.artworkId,
+                    fallbackArtworkId: track.fallbackArtworkId,
+                    cornerRadius: 18
+                )
+                .aspectRatio(1, contentMode: .fit)
+            }
+        }
         .frame(maxWidth: 340)
         .shadow(color: .black.opacity(0.5), radius: 30, y: 16)
-        .scaleEffect(playerStore.isPlaying ? 1 : 0.88)
+        .scaleEffect(showVideo || playerStore.isPlaying ? 1 : 0.88)
         .animation(reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.78), value: playerStore.isPlaying)
         .padding(.horizontal, 32)
+        .overlay(alignment: .bottom) {
+            if let videoError {
+                Text(videoError)
+                    .font(.caption)
+                    .foregroundStyle(Color.appDanger)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+            }
+        }
     }
 
     private func titleBlock(for track: QueueTrack) -> some View {
@@ -256,12 +279,13 @@ struct NowPlayingView: View {
         HStack(spacing: 0) {
             if playerStore.currentTrack?.hasVideo == true {
                 secondaryButton(
-                    systemImage: "film",
+                    systemImage: showVideo ? "film.fill" : "film",
                     label: "Video",
-                    isOn: false,
-                    accessibilityLabel: "Play the music video"
+                    isOn: showVideo,
+                    accessibilityLabel: showVideo ? "Hide the music video" : "Show the music video"
                 ) {
-                    showVideo = true
+                    videoError = nil
+                    showVideo.toggle()
                 }
             }
 

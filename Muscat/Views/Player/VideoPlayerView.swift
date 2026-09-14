@@ -42,6 +42,11 @@ struct VideoPlayerView: View {
             }
         }
         .task {
+            // This sheet is opened from a list, so its track is usually *not* the
+            // one playing — there is nothing to follow, and the video brings its own
+            // sound. Switching to the video of the track you are already listening
+            // to is the other case, and it lives in the player, where the audio
+            // keeps going and the picture follows it.
             playerStore.pause()
             await loadVideo()
         }
