@@ -238,11 +238,23 @@ public actor APIClient {
     private static let refreshMargin: TimeInterval = 120
 
     /// The access token, refreshed first if it is about to expire.
+    ///
+    /// Returns nil when the session is genuinely over, having cleared it and said
+    /// so. Handing back the expired token instead — which is what falling back
+    /// quietly amounts to — produces a player that answers 401 to everything, for
+    /// ever, with nothing on screen explaining why and no way out but deleting the
+    /// app.
     func freshAccessToken() async -> String? {
         guard let token = tokenStore.currentTokens()?.accessToken else { return nil }
         guard let expiry = Self.expiry(ofJWT: token) else { return token }
         guard expiry.timeIntervalSinceNow < Self.refreshMargin else { return token }
-        return (try? await refreshTokensIfNeeded())?.accessToken ?? token
+        do {
+            return try await refreshTokensIfNeeded().accessToken
+        } catch {
+            tokenStore.clear()
+            onUnauthenticated?()
+            return nil
+        }
     }
 
     /// The `exp` claim, read without verifying the signature — this is deciding

@@ -29,11 +29,12 @@ extension APIClient {
         // Refreshed before the URL is built: `AVPlayer` keeps using this string for
         // the life of the item and cannot be handed a new one, so a token that
         // expires a minute from now is a track that stops a minute from now.
-        if let token = await freshAccessToken() {
-            query.append(URLQueryItem(name: "token", value: token))
-            return unauthenticatedURL(path: "api/v1/stream/\(trackId)", query: query)
-        }
-        return authenticatedURL(path: "api/v1/stream/\(trackId)", query: query)
+        // No URL at all rather than one carrying a token known to be dead: a nil
+        // here becomes "couldn't build a streaming URL", which is at least a
+        // sentence, where the token version becomes an opaque -1013 on every track.
+        guard let token = await freshAccessToken() else { return nil }
+        query.append(URLQueryItem(name: "token", value: token))
+        return unauthenticatedURL(path: "api/v1/stream/\(trackId)", query: query)
     }
 
     /// `album_version_id` or a playlist id. Public endpoint, but we still build the URL

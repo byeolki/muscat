@@ -215,7 +215,12 @@ public final class PlayerStore {
         defer { isLoading = false }
 
         guard let url = await apiClient.streamURL(trackId: track.id, format: .aac, normalize: normalize) else {
-            errorMessage = "Couldn't build a streaming URL."
+            // The only way this fails is an expired session, and saying so is the
+            // difference between "sign in again" and staring at an error code.
+            errorMessage = "Your session expired — sign in again."
+            isPlaying = false
+            nowPlaying.updatePlaybackRate(isPlaying: false)
+            report(kind: "playback.session-expired", message: "no valid token for the stream URL")
             return
         }
         engine.load(url: url, autoplay: autoplay)
@@ -277,7 +282,9 @@ public final class PlayerStore {
             }
             self.isPlaying = false
             self.isLoading = false
-            self.errorMessage = message
+            self.errorMessage = Self.isAuthFailure(message)
+                ? "Your session expired — sign in again."
+                : message
             self.nowPlaying.updatePlaybackRate(isPlaying: false)
             self.report(kind: "playback.failed", message: message)
         }
