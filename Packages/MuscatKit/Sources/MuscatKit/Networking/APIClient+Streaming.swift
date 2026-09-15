@@ -26,6 +26,13 @@ extension APIClient {
         if let bitrate { query.append(URLQueryItem(name: "bitrate", value: String(bitrate))) }
         if let seekMs { query.append(URLQueryItem(name: "seek_ms", value: String(seekMs))) }
         if normalize { query.append(URLQueryItem(name: "normalize", value: "true")) }
+        // Refreshed before the URL is built: `AVPlayer` keeps using this string for
+        // the life of the item and cannot be handed a new one, so a token that
+        // expires a minute from now is a track that stops a minute from now.
+        if let token = await freshAccessToken() {
+            query.append(URLQueryItem(name: "token", value: token))
+            return unauthenticatedURL(path: "api/v1/stream/\(trackId)", query: query)
+        }
         return authenticatedURL(path: "api/v1/stream/\(trackId)", query: query)
     }
 

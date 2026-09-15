@@ -227,6 +227,50 @@ public actor APIClient {
 
     /// Builds an authenticated URL for things that can't set headers (AVPlayer, image
     /// views): appends `?token=<access_token>` per the server's guard fallback.
+    /// Seconds of remaining life below which a token is refreshed before use.
+    ///
+    /// A URL handed to `AVPlayer` carries its token in the query string and is used
+    /// for as long as the item is open, with no way for this client to intervene —
+    /// so it has to leave here valid. An access token lives fifteen minutes, which
+    /// is why playback used to stop partway through a listening session with
+    /// NSURLErrorUserAuthenticationRequired: the next track was requested with a
+    /// token that had quietly expired.
+    private static let refreshMargin: TimeInterval = 120
+
+    /// The access token, refreshed first if it is about to expire.
+    func freshAccessToken() async -> String? {
+        guard let token = tokenStore.currentTokens()?.accessToken else { return nil }
+        guard let expiry = Self.expiry(ofJWT: token) else { return token }
+        guard expiry.timeIntervalSinceNow < Self.refreshMargin else { return token }
+        return (try? await refreshTokensIfNeeded())?.accessToken ?? token
+    }
+
+    /// The `exp` claim, read without verifying the signature — this is deciding
+    /// when to refresh, not whether to trust it; the server does that.
+    static func expiry(ofJWT token: String) -> Date? {
+        let parts = token.split(separator: ".")
+        guard parts.count == 3 else { return nil }
+        var payload = String(parts[1]).replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        while payload.count % 4 != 0 { payload += "=" }
+        guard let data = Data(base64Encoded: payload),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let exp = json["exp"] as? Double else { return nil }
+        return Date(timeIntervalSince1970: exp)
+    }
+
+    /// A URL with the query given and nothing added — for callers that have already
+    /// attached a token they refreshed themselves.
+    func unauthenticatedURL(path: String, query: [URLQueryItem]) -> URL? {
+        guard var components = URLComponents(
+            url: baseURLValue.appendingPathComponent(path),
+            resolvingAgainstBaseURL: false
+        ) else { return nil }
+        components.queryItems = query.isEmpty ? nil : query
+        return components.url
+    }
+
+    /// Builds a URL with whatever token is stored. For anything long-lived, refresh
+    /// first — see `freshAccessToken`.
     func authenticatedURL(path: String, query: [URLQueryItem] = []) -> URL? {
         guard var components = URLComponents(
             url: baseURLValue.appendingPathComponent(path),

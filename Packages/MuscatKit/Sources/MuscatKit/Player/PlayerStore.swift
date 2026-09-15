@@ -27,6 +27,14 @@ public final class PlayerStore {
     private var queue = PlaybackQueue()
     /// Set when the saved preference says shuffle, applied as soon as a queue exists.
     private var restoreShuffleOnNextQueue = false
+    /// One retry per track, so a genuinely rejected stream cannot loop.
+    private var retriedAfterAuthFailure = false
+
+    /// -1013 is `NSURLErrorUserAuthenticationRequired`, which is how a 401 on the
+    /// stream endpoint reaches us — the message is all `AVPlayer` gives us.
+    private static func isAuthFailure(_ message: String) -> Bool {
+        message.contains("-1013") || message.localizedCaseInsensitiveContains("authentication")
+    }
     private var sleepTimerTask: Task<Void, Never>?
     private let engine = AudioPlayerEngine()
     private let nowPlaying = NowPlayingCenter()
@@ -231,7 +239,9 @@ public final class PlayerStore {
         // headphones unplugged, Siri — used to leave the button offering Pause over
         // silence, because nothing told the store.
         engine.onPlaybackStateChange = { [weak self] playing in
-            guard let self, self.isPlaying != playing else { return }
+            guard let self else { return }
+            if playing { self.retriedAfterAuthFailure = false }
+            guard self.isPlaying != playing else { return }
             self.isPlaying = playing
             self.nowPlaying.updatePlaybackRate(isPlaying: playing)
         }
@@ -254,6 +264,17 @@ public final class PlayerStore {
         }
         engine.onFailedToLoad = { [weak self] message in
             guard let self else { return }
+            // A stream URL carries its token in the query string, so one that
+            // expires mid-track fails the next range request with
+            // NSURLErrorUserAuthenticationRequired. Rebuilding the URL mints a
+            // fresh token, so the fix is to reload once from where we were —
+            // which is exactly what the listener would do by hand.
+            if Self.isAuthFailure(message), let track = self.currentTrack, !self.retriedAfterAuthFailure {
+                self.retriedAfterAuthFailure = true
+                self.report(kind: "playback.auth", message: "stream rejected the token; retrying with a fresh one")
+                Task { await self.loadAndPlay(track: track, resumeAt: self.currentSeconds, autoplay: true) }
+                return
+            }
             self.isPlaying = false
             self.isLoading = false
             self.errorMessage = message
